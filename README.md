@@ -1,8 +1,4 @@
-# Drop The Box Demo
-
-This is a demo for the service Amazon Location Service.
-
-This demo is part of a talk - watch the talk to understand each part of the demo.
+# Amazon CrowdGuard
 
 ## Notes
 

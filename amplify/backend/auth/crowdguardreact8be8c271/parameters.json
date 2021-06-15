@@ -1,8 +1,8 @@
 {
-    "identityPoolName": "crowdguardreact8212cab0_identitypool_8212cab0",
+    "identityPoolName": "crowdguardreact8be8c271_identitypool_8be8c271",
     "allowUnauthenticatedIdentities": false,
-    "resourceNameTruncated": "crowdg8212cab0",
-    "userPoolName": "crowdguardreact8212cab0_userpool_8212cab0",
+    "resourceNameTruncated": "crowdg8be8c271",
+    "userPoolName": "crowdguardreact8be8c271_userpool_8be8c271",
     "autoVerifiedAttributes": [
         "email"
     ],
@@ -28,10 +28,10 @@
     "userpoolClientReadAttributes": [
         "email"
     ],
-    "userpoolClientLambdaRole": "crowdg8212cab0_userpoolclient_lambda_role",
+    "userpoolClientLambdaRole": "crowdg8be8c271_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
-    "sharedId": "8212cab0",
-    "resourceName": "crowdguardreact8212cab0",
+    "sharedId": "8be8c271",
+    "resourceName": "crowdguardreact8be8c271",
     "authSelections": "identityPoolAndUserPool",
     "authRoleArn": {
         "Fn::GetAtt": [

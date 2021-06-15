@@ -1,6 +1,6 @@
 {
   "auth": {
-    "crowdguardreact8212cab0": {
+    "crowdguardreact8be8c271": {
       "service": "Cognito",
       "providerPlugin": "awscloudformation",
       "dependsOn": [],
