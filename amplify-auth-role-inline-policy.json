@@ -1,0 +1,20 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "geo:GetMap*",
+            "Resource": "arn:aws:geo:us-west-2:811400410548:map/crowdguard-map"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "geo:SearchPlaceIndexForText",
+            "Resource": "arn:aws:geo:us-west-2:811400410548:place-index/crowdguard-placeindex"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "geo:GetDevicePositionHistory",
+            "Resource": "arn:aws:geo:us-west-2:811400410548:tracker/crowdguard-tracker"
+        }
+    ]
+}

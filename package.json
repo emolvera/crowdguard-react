@@ -1,5 +1,5 @@
 {
-  "name": "drop-the-box-demo",
+  "name": "crowdguard-react",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -48,5 +48,6 @@
     "url": "https://git-codecommit.us-west-2.amazonaws.com/v1/repos/crowdguard-react"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {}
 }
