@@ -1,0 +1,10 @@
+{
+  "auth": {
+    "crowdguardreact958efb2e": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-crowdguardreact-dev-34043-authRole",
+      "UnauthRoleArn": "arn:aws:iam::811400410548:role/amplify-crowdguardreact-dev-34043-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::811400410548:role/amplify-crowdguardreact-dev-34043-authRole",
+      "Region": "us-west-2",
+      "DeploymentBucketName": "amplify-crowdguardreact-dev-34043-deployment",
+      "UnauthRoleName": "amplify-crowdguardreact-dev-34043-unauthRole",
+      "StackName": "amplify-crowdguardreact-dev-34043",
+      "StackId": "arn:aws:cloudformation:us-west-2:811400410548:stack/amplify-crowdguardreact-dev-34043/f8b401a0-cb2f-11eb-98a8-0684ebec448d",
+      "AmplifyAppId": "dmfd1wrzzqzx7"
+    },
+    "categories": {
+      "auth": {
+        "crowdguardreact958efb2e": {}
+      }
+    }
+  }
+}
