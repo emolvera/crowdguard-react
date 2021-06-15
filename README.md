@@ -13,7 +13,7 @@ If you want to create this demo from scratch these are the steps you need to fol
 1. Create the react app
 
 ```
-npx create-react-app drop-the-box-demo
+npx create-react-app crowdguard-react
 ```
 
 2. Make sure that you have Amplify configured in your computer. If not follow the instructions in the documentation.
