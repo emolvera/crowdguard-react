@@ -1,0 +1,29 @@
+version: 1
+backend:
+  phases:
+    build:
+      commands:
+        - '# Execute Amplify CLI with the helper script'
+        - amplifyPush --simple
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - yarn install
+    build:
+      commands:
+        - yarn add bootstrap
+        - yarn add @aws-amplify/ui-react
+        - yarn add aws-sdk
+        - yarn add @aws-amplify/core
+        - yarn add mapbox-gl@1.0.0
+        - yarn add react-map-gl@5.2.11
+        - yarn add aws-amplify
+        - yarn run build
+  artifacts:
+    baseDirectory: build
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
