@@ -16,5 +16,10 @@ aws location batch-delete-device-position-history \
 
 aws location search-place-index-for-text \
     --index-name "crowdguard-placeindex" \
-    --text "NYC" \
-    --max-results 3 
+    --text "starbucks"  \
+    --max-results 3 \
+    --bias-position [-99.19514999999996,19.647110000000055]
+    
+aws location search-place-index-for-position \
+    --index-name "crowdguard-placeindex" \
+    --position [-99.19514999999996,19.647110000000055]
