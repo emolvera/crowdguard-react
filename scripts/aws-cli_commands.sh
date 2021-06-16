@@ -22,4 +22,5 @@ aws location search-place-index-for-text \
     
 aws location search-place-index-for-position \
     --index-name "crowdguard-placeindex" \
+    --max-results 1 \
     --position [-99.19514999999996,19.647110000000055]
