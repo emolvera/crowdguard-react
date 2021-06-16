@@ -55,21 +55,6 @@ const transformRequest = (credentials) => (url, resourceType) => {
   return { url: url || "" };
 };
 
-function Header(props) {
-  return (
-    <div className="container">
-      <div className="row">
-        <div className="col-10">
-          <h1>Amazon CrowdGuard</h1>
-        </div>
-        <div className="col-2">
-          <AmplifySignOut />
-        </div>
-      </div>
-    </div>
-  )
-};
-
 function Search(props){
 
   const [place, setPlace] = useState('Seattle');
@@ -165,9 +150,18 @@ const App = () => {
     });
   }
 
+  const navControlStyle = {
+    position: 'absolute',
+    top: 36,
+    left: 0,
+    padding: '10px'
+  };
+  
   const geolocateControlStyle= {
-    right: 10,
-    top: 10
+    position: 'absolute',
+    left: 0,
+    margin: 0,
+    padding: '10px',
   };
 
   // Get User Geolocation
@@ -182,34 +176,47 @@ const App = () => {
   // Create React Map Gl Popups
   const togglePopup = (state) => {
     showPopup = state;
-    console.log(`Click on marker`);
+    //console.log(`Click on marker`);
   };
 
   return (
-    <AmplifyAuthenticator>
     <div className="App">
-      <Header/>
+      <header className="App-header">
+          <h1>Amazon CrowdGuard</h1>
+      </header>
       <div>
-        <Search searchPlace = {searchPlace} />
+      <AmplifyAuthenticator>
+      <div className="container">
+        <div className="row">
+          <div className="col">
+            <Search searchPlace = {searchPlace} />
+          </div>
+          <AmplifySignOut/>
+        </div>
       </div>
-      <div>
       {credentials ? (
           <ReactMapGL
             {...viewport}
-            width="100%"
+            width="100vw"
             height="100vh"
             transformRequest={transformRequest(credentials)}
             mapStyle={mapName}
             onViewportChange={setViewport}
           >
-            <NavigationControl showCompass={false} />
-            <GeolocateControl
-                onGeolocate={onGeolocate}                
-                style={geolocateControlStyle}
+            <div className="nav" style={navControlStyle}>
+              <NavigationControl showCompass={false}/>
+            </div>
+            <div className="nav" style={geolocateControlStyle}>
+              <GeolocateControl
+                onGeolocate={onGeolocate}
                 positionOptions={{enableHighAccuracy: true}}
                 trackUserLocation={true}
+                showUserLocation={true}
+                showAccuracyCircle={true}
+                label={'My Location'}
                 auto
-            />
+              />
+            </div>
             <Marker
               longitude={marker.longitude}
               latitude={marker.latitude}
@@ -238,9 +245,9 @@ const App = () => {
       ) : (
         <h1>Loading...</h1>
       )}
+      </AmplifyAuthenticator>
       </div>
     </div>
-    </AmplifyAuthenticator>
   );
 }
 
