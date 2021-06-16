@@ -13,3 +13,8 @@ aws location batch-delete-device-position-history \
     --region us-west-2 \
     --device-ids "exampledevice" \
     --tracker-name "droptheboxdemo"
+
+aws location search-place-index-for-text \
+    --index-name "crowdguard-placeindex" \
+    --text "NYC" \
+    --max-results 3 

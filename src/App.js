@@ -10,9 +10,9 @@ import { Signer } from "@aws-amplify/core";
 import Location from "aws-sdk/clients/location";
 
 import Pin from './Pin'
-import useInterval from './useInterval'
 
 import ReactMapGL, {
+  Popup,
   Marker,
   NavigationControl,
   GeolocateControl
@@ -27,6 +27,7 @@ const trackerName = "crowdguard-tracker" // HERE GOES THE NAME OF  YOUR TRACKER
 const deviceID = "exampledevice" // HERE IT GOES THE NAME OF YOUR DEVICE
 
 var userLocation = [0,0]
+var showPopup = false;
 
 Amplify.configure(awsconfig);
 
@@ -76,6 +77,11 @@ function Search(props){
   const handleChange = (event) => {
     setPlace(event.target.value);
   }
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      handleClick(event);
+    }   
+  }
 
   const handleClick = (event) => {
     event.preventDefault();
@@ -85,7 +91,7 @@ function Search(props){
   return (
     <div className="container">
       <div className="input-group">
-        <input type="text" className="form-control form-control-lg" placeholder="Search for Places" aria-label="Place" aria-describedby="basic-addon2" value={ place } onChange={handleChange}/>
+        <input type="text" className="form-control form-control-lg" placeholder="Search for Places" aria-label="Place" aria-describedby="basic-addon2" value={ place } onChange={handleChange} onKeyDown={handleKeyDown}/>
         <div className="input-group-append">
           <button onClick={ handleClick } className="btn btn-primary" type="submit">Search</button>
         </div>
@@ -94,24 +100,6 @@ function Search(props){
   )
 };
 
-function Track(props){
-  
-  const handleClick = (event) => {
-    event.preventDefault();
-    props.trackDevice()
-  }
-
-  return (
-    <div className="container">
-      <div className="input-group">
-        <div className="input-group-append">
-          <button onClick={ handleClick } className="btn btn-primary" type="submit">Track</button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 const App = () => {
 
   const [credentials, setCredentials] = useState(null);
@@ -119,7 +107,7 @@ const App = () => {
   const [viewport, setViewport] = useState({
     longitude: -123.1187,
     latitude: 49.2819,
-    zoom: 10,
+    zoom: 11,
   });
 
   const [client, setClient] = useState(null);
@@ -127,17 +115,8 @@ const App = () => {
   const [marker, setMarker] = useState({
     longitude: -123.1187,
     latitude: 49.2819,
+    place: 'Place',
   });
-
-  const [devPosMarkers, setDevPosMarkers] = useState([]);
-
-  // Get User Geolocation
-  const onGeolocate = (geolocation) => {
-    if (geolocation != null) {
-      userLocation = [geolocation.coords.longitude, geolocation.coords.latitude];
-      console.log(`userLocation: ${userLocation}\n`);
-    };
-  };
   
   useEffect(() => {
     const fetchCredentials = async () => {
@@ -157,11 +136,7 @@ const App = () => {
 
     createClient();  
   }, []);
-
-  useInterval(() => {
-    getDevicePosition();
-  }, 10000);
-
+  
   const searchPlace = (place) => {
 
     const params = {
@@ -178,65 +153,36 @@ const App = () => {
         setViewport({
           longitude: coordinates[0],
           latitude: coordinates[1], 
-          zoom: 10});
+          zoom: 11});
 
         setMarker({
           longitude: coordinates[0],
-          latitude: coordinates[1],                 
+          latitude: coordinates[1],
+          place: data.Results[0].Place.Label.split(', ')[0],
         })
         return coordinates;
       }
     });
   }
 
-  const getDevicePosition = () => {
-    setDevPosMarkers([]);
-
-    var params = {
-      DeviceId: deviceID,
-      TrackerName: trackerName,
-      StartTimeInclusive:"2020-11-02T19:05:07.327Z" ,
-      EndTimeExclusive: new Date()
-    };
-
-    client.getDevicePositionHistory(params, (err, data) => {
-      if (err) console.log(err, err.stack); 
-      if (data) { 
-        console.log(data)
-        const tempPosMarkers =  data.DevicePositions.map( function (devPos, index) {
-
-          return {
-            index: index,
-            long: devPos.Position[0],
-            lat: devPos.Position[1]
-          } 
-        });
-
-        if (tempPosMarkers.length > 0) {
-          setDevPosMarkers(tempPosMarkers);
-  
-          const pos = tempPosMarkers.length -1;
-          
-          setViewport({
-            longitude: tempPosMarkers[pos].long,
-            latitude: tempPosMarkers[pos].lat, 
-            zoom: 5});
-        }
-    
-      }
-    });
-  }
-
-  const trackerMarkers = React.useMemo(() => devPosMarkers.map(
-    pos => (
-      <Marker key={pos.index} longitude={pos.long} latitude={pos.lat} >
-        <Pin text={pos.index+1} size={20}/>
-      </Marker>
-    )), [devPosMarkers]);
-
   const geolocateControlStyle= {
     right: 10,
     top: 10
+  };
+
+  // Get User Geolocation
+  const onGeolocate = (geolocation) => {
+    if (geolocation != null) {
+      userLocation = [geolocation.coords.longitude, geolocation.coords.latitude];
+      //console.log(`userLocation: ${userLocation}\n`);
+    };
+  };
+
+  
+  // Create React Map Gl Popups
+  const togglePopup = (state) => {
+    showPopup = state;
+    console.log(`Click on marker`);
   };
 
   return (
@@ -245,37 +191,49 @@ const App = () => {
       <Header/>
       <div>
         <Search searchPlace = {searchPlace} />
-        <Track trackDevice = {getDevicePosition}/>
       </div>
       <div>
       {credentials ? (
           <ReactMapGL
             {...viewport}
-            width="100vw"
+            width="100%"
             height="100vh"
             transformRequest={transformRequest(credentials)}
             mapStyle={mapName}
             onViewportChange={setViewport}
           >
+            <NavigationControl showCompass={false} />
             <GeolocateControl
                 onGeolocate={onGeolocate}                
                 style={geolocateControlStyle}
                 positionOptions={{enableHighAccuracy: true}}
                 trackUserLocation={true}
                 auto
-              />
+            />
             <Marker
               longitude={marker.longitude}
               latitude={marker.latitude}
-              offsetTop={-20}
-              offsetLeft={-10}
             > 
-            <Pin size={20}/>
+              <Pin
+                onClick={() => togglePopup(true)}
+              />
             </Marker>
-            {trackerMarkers}
-            <div style={{ position: "absolute", left: 20, top: 20 }}>
-              <NavigationControl showCompass={false} />
-            </div>
+            {showPopup && (
+              <Popup
+                longitude={marker.longitude}
+                latitude={marker.latitude}
+                closeButton={true}
+                closeOnClick={false}
+                onClose={() => togglePopup(false)}
+                anchor="top"
+              >
+                <span>{marker.place}</span>
+                <br/>
+                <span>Latitude: {marker.latitude}</span>
+                <br/>
+                <span>Longitude: {marker.longitude}</span>
+              </Popup>
+            )}
           </ReactMapGL>
       ) : (
         <h1>Loading...</h1>

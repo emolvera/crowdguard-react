@@ -52,9 +52,6 @@ cp base/App-01.js src/App.js
 npm start
 ```
 
-_Expected result_
-![screenshot of how it should look](/images/image01.png)
-
 ### Adding maps
 
 1. Now you need to go into your AWS account and create a new map in the Amazon Location service.
@@ -156,11 +153,6 @@ cp base/useInterval.js src/useInterval.js
 This script will send locations every 30 seconds to the location service, simulating your device.
 
 5. Now you can visualize this by pressing the button track in the web app. And you will see new red dots appearing in the screen every 30 seconds.
-
-Expected results:
-
-_Expected result_
-![screenshot of how it should look](/images/image02.png)
 
 ### Geofencing and notifications
 
