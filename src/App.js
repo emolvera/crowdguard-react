@@ -9,7 +9,9 @@ import { AmplifyAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react';
 import { Signer } from "@aws-amplify/core";
 import Location from "aws-sdk/clients/location";
 
-import Pin from './Pin'
+import { Search } from './Places';
+import Pin from './Pin';
+//import Popup from './Popup';
 
 import ReactMapGL, {
   Popup,
@@ -23,11 +25,11 @@ import awsconfig from './aws-exports';
 
 const mapName = "crowdguard-map"; // HERE IT GOES THE NAME OF YOUR MAP
 const indexName = "crowdguard-placeindex" // HERE GOES THE NAME OF YOUR PLACE INDEX
-const trackerName = "crowdguard-tracker" // HERE GOES THE NAME OF  YOUR TRACKER
-const deviceID = "exampledevice" // HERE IT GOES THE NAME OF YOUR DEVICE
+//const trackerName = "crowdguard-tracker" // HERE GOES THE NAME OF  YOUR TRACKER
+//const deviceID = "exampledevice" // HERE IT GOES THE NAME OF YOUR DEVICE
 
 var userLocation = [0,0]
-var showPopup = false;
+var showMarkerPopup = true;
 
 Amplify.configure(awsconfig);
 
@@ -55,54 +57,8 @@ const transformRequest = (credentials) => (url, resourceType) => {
   return { url: url || "" };
 };
 
-function Search(props){
-
-  const [place, setPlace] = useState('Seattle');
- 
-  const handleChange = (event) => {
-    setPlace(event.target.value);
-  }
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
-      handleClick(event);
-    }   
-  }
-
-  const handleClick = (event) => {
-    event.preventDefault();
-    props.searchPlace(place)
-  }
-  
-  return (
-    <div className="container">
-      <div className="input-group">
-        <input type="text" className="form-control form-control-lg" placeholder="Search for Places" aria-label="Place" aria-describedby="basic-addon2" value={ place } onChange={handleChange} onKeyDown={handleKeyDown}/>
-        <div className="input-group-append">
-          <button onClick={ handleClick } className="btn btn-primary" type="submit">Search</button>
-        </div>
-      </div>
-    </div>
-  )
-};
-
 const App = () => {
 
-  const [credentials, setCredentials] = useState(null);
-
-  const [viewport, setViewport] = useState({
-    longitude: -123.1187,
-    latitude: 49.2819,
-    zoom: 11,
-  });
-
-  const [client, setClient] = useState(null);
- 
-  const [marker, setMarker] = useState({
-    longitude: -123.1187,
-    latitude: 49.2819,
-    place: 'Place',
-  });
-  
   useEffect(() => {
     const fetchCredentials = async () => {
       setCredentials(await Auth.currentUserCredentials());
@@ -149,6 +105,22 @@ const App = () => {
       }
     });
   }
+  
+  const [credentials, setCredentials] = useState(null);
+
+  const [client, setClient] = useState(null);
+
+  const [viewport, setViewport] = useState({
+    longitude: -123.1187,
+    latitude: 49.2819,
+    zoom: 11,
+  });
+ 
+  const [marker, setMarker] = useState({
+    longitude: -123.1187,
+    latitude: 49.2819,
+    place: 'Place',
+  });
 
   const navControlStyle = {
     position: 'absolute',
@@ -172,12 +144,13 @@ const App = () => {
     };
   };
 
-  
   // Create React Map Gl Popups
-  const togglePopup = (state) => {
-    showPopup = state;
+  const toggleMarkerPopup = (state) => {
+    showMarkerPopup = state;
     //console.log(`Click on marker`);
   };
+
+  
 
   return (
     <div className="App">
@@ -222,16 +195,16 @@ const App = () => {
               latitude={marker.latitude}
             > 
               <Pin
-                onClick={() => togglePopup(true)}
+                onClick={() => toggleMarkerPopup(true)}
               />
             </Marker>
-            {showPopup && (
+            {showMarkerPopup && (
               <Popup
                 longitude={marker.longitude}
                 latitude={marker.latitude}
                 closeButton={true}
                 closeOnClick={false}
-                onClose={() => togglePopup(false)}
+                onClose={() => toggleMarkerPopup(false)}
                 anchor="top"
               >
                 <span>{marker.place}</span>
