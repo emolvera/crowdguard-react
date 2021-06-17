@@ -1,0 +1,11 @@
+aws location search-place-index-for-position\
+    --index-name "crowdguard-placeindex"\
+    --position "[-99.19514999999996,19.647110000000055]"
+
+aws location search-place-index-for-text\
+    --index-name "crowdguard-placeindex"\
+    --text "bodega aurrera"\
+    --max-results 3\
+    --bias-position "[-99.09993999999995,19.66262000000006]"
+
+[Long,lat] -99.09993999999995,19.66262000000006
