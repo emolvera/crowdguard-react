@@ -9,9 +9,9 @@ const WindowPopup = props => {
     <div className='popup-box'>
       <div className='box'>
         <span className='close-icon' onClick={props.handleClose}>x</span>
-        <b>This is a popup</b>
+        <b>You are in {props.userLocation.place}</b>
         <p>
-          Hello
+          {props.userLocation.address}
           <br/>
           <img height="40" src={happy} alt='' /*onClick={() => onClick()}*/ />
           <img height="40" src={neutral} alt='' /*onClick={() => onClick()}*/ />
