@@ -8,7 +8,7 @@
         },
         {
             "Effect": "Allow",
-            "Action": "geo:SearchPlaceIndexForText",
+            "Action": "geo:SearchPlaceIndexFor*",
             "Resource": "arn:aws:geo:us-west-2:811400410548:place-index/crowdguard-placeindex"
         },
         {

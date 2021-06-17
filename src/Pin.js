@@ -2,7 +2,7 @@
 //  SPDX-License-Identifier: MIT-0
 
 import React, { PureComponent } from "react";
-import pin from "./pin.png";
+import pin from "./img/pin.png";
 import "./Pin.css";
 
 const pinStyle = {
@@ -18,6 +18,7 @@ export default class CityPin extends PureComponent {
 
     return (
       <img
+        alt=''
         height={size}
         viewBox="0 0 24 24"
         style={{
