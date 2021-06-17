@@ -10,8 +10,8 @@ import { Signer } from "@aws-amplify/core";
 import Location from "aws-sdk/clients/location";
 
 import { Search } from './Places';
+import WindowPopup from './WindowPopup';
 import Pin from './Pin';
-//import Popup from './Popup';
 
 import ReactMapGL, {
   Popup,
@@ -100,6 +100,7 @@ const App = () => {
           longitude: coordinates[0],
           latitude: coordinates[1],
           place: data.Results[0].Place.Label.split(', ')[0],
+          address: data.Results[0].Place.Label.split(', ').slice(1).join(', '),
         })
         return coordinates;
       }
@@ -120,6 +121,7 @@ const App = () => {
     longitude: -123.1187,
     latitude: 49.2819,
     place: 'Place',
+    address: 'Address'
   });
 
   const navControlStyle = {
@@ -136,6 +138,12 @@ const App = () => {
     padding: '10px',
   };
 
+  // Define WindowPopup
+  const [isOpen, setIsOpen] = useState(false);
+  const toggleWindowPopup = () => {
+    setIsOpen(!isOpen);
+  }
+
   // Get User Geolocation
   const onGeolocate = (geolocation) => {
     if (geolocation != null) {
@@ -150,8 +158,7 @@ const App = () => {
     //console.log(`Click on marker`);
   };
 
-  
-
+  // RETURN
   return (
     <div className="App">
       <header className="App-header">
@@ -167,6 +174,7 @@ const App = () => {
           <AmplifySignOut/>
         </div>
       </div>
+      <button onClick={ toggleWindowPopup } className="btn btn-secondary" type="submit">Open Popup</button>
       {credentials ? (
           <ReactMapGL
             {...viewport}
@@ -186,7 +194,6 @@ const App = () => {
                 trackUserLocation={true}
                 showUserLocation={true}
                 showAccuracyCircle={true}
-                label={'My Location'}
                 auto
               />
             </div>
@@ -207,13 +214,17 @@ const App = () => {
                 onClose={() => toggleMarkerPopup(false)}
                 anchor="top"
               >
-                <span>{marker.place}</span>
+                <span><b>{marker.place}</b></span>
                 <br/>
-                <span>Latitude: {marker.latitude}</span>
-                <br/>
-                <span>Longitude: {marker.longitude}</span>
+                <span>{marker.address}</span>
               </Popup>
             )}
+            {isOpen && <WindowPopup
+              buttons={<>
+                <button onClick={ toggleWindowPopup } className="btn btn-secondary" type="submit">Close Popup</button>
+              </>}
+              handleClose={toggleWindowPopup}
+            />}
           </ReactMapGL>
       ) : (
         <h1>Loading...</h1>
