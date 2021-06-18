@@ -23,7 +23,7 @@ while [ true ]
 
         let LAT+=1
         let LONG+=1
-        sleep 10
+        sleep 5
     done
 
 echo All done

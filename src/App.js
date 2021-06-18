@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 import React, { useState, useEffect } from 'react';
 
+import awsmobile from "./aws-exports";
 import Amplify, { Auth } from 'aws-amplify';
 import { AmplifyAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react';
 
@@ -27,7 +28,8 @@ const mapName = "crowdguard-map"; // HERE IT GOES THE NAME OF YOUR MAP
 const indexName = "crowdguard-placeindex"; // HERE GOES THE NAME OF YOUR PLACE INDEX
 //const trackerName = "crowdguard-tracker" // HERE GOES THE NAME OF  YOUR TRACKER
 //const deviceID = "exampledevice" // HERE IT GOES THE NAME OF YOUR DEVICE
-var userLocation = [0,0];
+
+const maxPlaces = 15;     // Max number search results to display on the map
 var placeLabel = '';
 
 Amplify.configure(awsconfig);
@@ -56,30 +58,48 @@ const transformRequest = (credentials) => (url, resourceType) => {
   return { url: url || "" };
 };
 
-const App = () => {
-
-  useEffect(() => {
-    const fetchCredentials = async () => {
-      setCredentials(await Auth.currentUserCredentials());
-    };
-
-    fetchCredentials();
-
-    const createClient = async () => {
-      const credentials = await Auth.currentCredentials();
-      const client = new Location({
-          credentials,
-          region: awsconfig.aws_project_region,
-     });
-     setClient(client);
-    }
-
-    createClient();  
-  }, []);
+function App() {
 
   const [credentials, setCredentials] = useState(null);
+  const [client, setLocationClient] = useState(null);
 
-  const [client, setClient] = useState(null);
+  //Check if there are credentials set, if not, get credentials
+  async function getUserCredentials() {
+    let currCredentials;
+    try {
+      currCredentials = await Auth.currentCredentials();
+      if ("sessionToken" in currCredentials) {
+        return setCredentials(currCredentials);
+      } else throw new Error("Not Authenticated");
+    } catch (err) {
+      alert(err);
+      return null;
+    }
+  }
+  // Create and Amazon Location Client using AWS SDK and Render the Map;
+  function initLocationClient() {
+    try {
+      const newLocationClient = new Location({
+        credentials: credentials,
+        region: awsmobile.aws_project_region,
+      });
+      return setLocationClient(newLocationClient);
+    } catch (error) {
+      alert(error);
+    }
+  }
+  useEffect(() => {
+    const getCredentials = async () => await getUserCredentials();
+    getCredentials();
+  }, []);
+  useEffect(() => {
+    if (credentials && !client) {
+      initLocationClient(credentials);
+    }
+  }, [credentials]);
+  useEffect(() => {
+    if (client && credentials){}
+  }, [client]);
 
   const [viewport, setViewport] = useState({
     longitude: 0,
@@ -88,13 +108,6 @@ const App = () => {
   });
 
   const [userLocation, setUserLocation] = useState({
-    longitude: 0,
-    latitude: 0,
-    place: '',
-    address: ''
-  });
- 
-  const [marker, setMarker] = useState({
     longitude: 0,
     latitude: 0,
     place: '',
@@ -115,35 +128,59 @@ const App = () => {
     padding: '10px',
   };
   
+  // Create React Map Gl Place Markers & Popups
+  const [markers, setMarkers] = useState([]);
+  const [popupInfo, setPopupInfo] = useState(null);
+  
   const searchPlace = (place) => {
 
     const params = {
       IndexName: indexName,
       Text: place,
-      BiasPosition: [userLocation.longitude,userLocation.latitude]
+      BiasPosition: [viewport.longitude,viewport.latitude],
+      /*FilterBBox: [ viewport.longitude-coordRange, viewport.latitude-coordRange, viewport.longitude+coordRange, viewport.latitude+coordRange]*/
     };
-
+    
     client.searchPlaceIndexForText(params, (err, data) => {
       if (err) console.error(err);
+      
       if (data) {
- 
+        var n = Math.min(maxPlaces, data.Results.length);
+        setMarkers(data.Results.slice(0, n));
+        
         const coordinates = data.Results[0].Place.Geometry.Point;
+        const label = data.Results[0].Place.Label;
         setViewport({
           longitude: coordinates[0],
-          latitude: coordinates[1], 
-          zoom: 13});
-        setMarker({
+          latitude: coordinates[1],
+          zoom: 14});
+        setPopupInfo({  // Show Popoup for closest Pin
+          key: 'marker0',
           longitude: coordinates[0],
           latitude: coordinates[1],
-          place: data.Results[0].Place.Label.split(', ')[0],
-          address: data.Results[0].Place.Label.split(', ').slice(1).join(', '),
-        })
-        toggleMarkerPopup(true);
-
-        return coordinates;
+          place: label.split(', ')[0],
+          address: label.split(', ').slice(1).join(', ')
+        });
       }
     });
   }
+
+ // Create React Map Gl markers.
+  const mapMarkers = React.useMemo( () =>
+    markers.map((places, index) => (
+      <Marker
+        key={`marker${index}`}
+        longitude={places.Place.Geometry.Point[0]}
+        latitude={places.Place.Geometry.Point[1]}
+      >
+        <Pin
+          key={`pin${index}`}
+          placeData={places.Place}
+          onClick={setPopupInfo}
+        />
+      </Marker>
+    )), [markers]
+  );
   
   const reverseSearchPlace = (userCoordinates) => {
 
@@ -162,7 +199,6 @@ const App = () => {
           setIsOpen(false);
           toggleWindowPopup();
         }
-
         placeLabel = data.Results[0].Place.Label;
         
         setUserLocation({
@@ -175,9 +211,6 @@ const App = () => {
       return;
     });
   }
-
-  // Create React Map Gl Popups
-  const [showMarkerPopup, toggleMarkerPopup] = useState(false);
 
   // Define WindowPopup
   const [isOpen, setIsOpen] = useState(false);
@@ -232,24 +265,19 @@ const App = () => {
                 auto
               />
             </div>
-            <Marker
-              longitude={marker.longitude}
-              latitude={marker.latitude}
-            > 
-              <Pin onClick={() => toggleMarkerPopup(true)} />
-            </Marker>
-            {showMarkerPopup && (
+            {mapMarkers}
+            {popupInfo && (
               <Popup
-                longitude={marker.longitude}
-                latitude={marker.latitude}
-                closeButton={true}
-                closeOnClick={false}
-                onClose={() => toggleMarkerPopup(false)}
+                tipSize={5}
                 anchor="top"
+                longitude={popupInfo.longitude}
+                latitude={popupInfo.latitude}
+                closeOnClick={false}
+                onClose={setPopupInfo}
               >
-                <span><b>{marker.place}</b></span>
+                <span><b>{popupInfo.place}</b></span>
                 <br/>
-                <span>{marker.address}</span>
+                <span>{popupInfo.address}</span>
               </Popup>
             )}
             {isOpen && <WindowPopup

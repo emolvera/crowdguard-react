@@ -1,18 +1,18 @@
 #!/bin/bash
 
-./scripts/send-new-locations.sh droptheboxdemo exampledevice us-west-2
+./scripts/send-new-locations.sh crowdguard-tracker exampledevice us-west-2
 
 aws location get-device-position-history \
     --region us-west-2 \
     --device-id "exampledevice" \
     --start-time-inclusive "2020-10-02T19:05:07.327Z" \
     --end-time-exclusive "2022-10-02T19:20:07.327Z" \
-    --tracker-name "droptheboxdemo"
+    --tracker-name "crowdguard-tracker"
 
 aws location batch-delete-device-position-history \
     --region us-west-2 \
     --device-ids "exampledevice" \
-    --tracker-name "droptheboxdemo"
+    --tracker-name "crowdguard-tracker"
 
 aws location search-place-index-for-text \
     --index-name "crowdguard-placeindex" \
