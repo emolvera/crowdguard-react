@@ -2,15 +2,14 @@
 //  SPDX-License-Identifier: MIT-0
 
 import React, { PureComponent } from "react";
-import pin from "./img/pin.png";
-import "./Pin.css";
+import pin from "../img/pin.png";
+import "../css/Pin.css";
 
 const pinStyle = {
   cursor: "pointer",
   fill: "#d00",
   stroke: "none",
 };
-
 
 export default class CityPin extends PureComponent {
   render() {

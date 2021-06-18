@@ -1,8 +1,8 @@
 import React from 'react';
 
-import happy    from "./img/happy.png";
-import neutral  from "./img/neutral.png";
-import sad      from "./img/sad.png";
+import happy    from '../img/happy.png';
+import neutral  from '../img/neutral.png';
+import sad      from '../img/sad.png';
 
 const WindowPopup = props => {
   return (

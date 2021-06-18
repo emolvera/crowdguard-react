@@ -9,9 +9,9 @@ import { AmplifyAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react';
 import { Signer } from "@aws-amplify/core";
 import Location from "aws-sdk/clients/location";
 
-import { Search } from './Places';
-import WindowPopup from './WindowPopup';
-import Pin from './Pin';
+import { Search } from './components/Places';
+import WindowPopup from './components/WindowPopup';
+import Pin from './components/Pin';
 
 import ReactMapGL, {
   Popup,
@@ -27,6 +27,7 @@ const mapName = "crowdguard-map"; // HERE IT GOES THE NAME OF YOUR MAP
 const indexName = "crowdguard-placeindex"; // HERE GOES THE NAME OF YOUR PLACE INDEX
 //const trackerName = "crowdguard-tracker" // HERE GOES THE NAME OF  YOUR TRACKER
 //const deviceID = "exampledevice" // HERE IT GOES THE NAME OF YOUR DEVICE
+var userLocation = [0,0];
 var placeLabel = '';
 
 Amplify.configure(awsconfig);
@@ -235,9 +236,7 @@ const App = () => {
               longitude={marker.longitude}
               latitude={marker.latitude}
             > 
-              <Pin
-                onClick={() => toggleMarkerPopup(true)}
-              />
+              <Pin onClick={() => toggleMarkerPopup(true)} />
             </Marker>
             {showMarkerPopup && (
               <Popup
@@ -255,7 +254,10 @@ const App = () => {
             )}
             {isOpen && <WindowPopup
               buttons={<>
-                <button onClick={ toggleWindowPopup } className="btn btn-secondary" type="submit">Close</button>
+                <button 
+                  onClick={ toggleWindowPopup } 
+                  className="btn btn-secondary" 
+                  type="submit">Close</button>
               </>}
               handleClose={toggleWindowPopup}
               userLocation={userLocation}
