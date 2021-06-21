@@ -1,16 +1,20 @@
-import './App.css';
+import './css/App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import React, { useState, useEffect } from 'react';
 
-import awsmobile from "./aws-exports";
+import awsmobile from './aws-exports';
 import Amplify, { Auth } from 'aws-amplify';
 import { AmplifyAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react';
 
-import { Signer } from "@aws-amplify/core";
-import Location from "aws-sdk/clients/location";
+import { Signer } from '@aws-amplify/core';
+import Location from 'aws-sdk/clients/location';
 
-import { Search } from './components/Places';
+import {
+  InitSDK,
+  Search,
+  UpdateUserPositionDDB
+} from './components/Places';
 import WindowPopup from './components/WindowPopup';
 import Pin from './components/Pin';
 
@@ -19,18 +23,19 @@ import ReactMapGL, {
   Marker,
   NavigationControl,
   GeolocateControl
-} from "react-map-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+} from 'react-map-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 import awsconfig from './aws-exports';
 
-const mapName = "crowdguard-map"; // HERE IT GOES THE NAME OF YOUR MAP
-const indexName = "crowdguard-placeindex"; // HERE GOES THE NAME OF YOUR PLACE INDEX
-//const trackerName = "crowdguard-tracker" // HERE GOES THE NAME OF  YOUR TRACKER
-//const deviceID = "exampledevice" // HERE IT GOES THE NAME OF YOUR DEVICE
+const mapName = 'crowdguard-map'; // HERE IT GOES THE NAME OF YOUR MAP
+const indexName = 'crowdguard-placeindex'; // HERE GOES THE NAME OF YOUR PLACE INDEX
+//const trackerName = 'crowdguard-tracker' // HERE GOES THE NAME OF  YOUR TRACKER
+//const deviceID = 'exampledevice' // HERE IT GOES THE NAME OF YOUR DEVICE
 
 const maxPlaces = 15;     // Max number search results to display on the map
 var placeLabel = '';
+var user = null;
 
 Amplify.configure(awsconfig);
 
@@ -39,12 +44,12 @@ Amplify.configure(awsconfig);
 */
 const transformRequest = (credentials) => (url, resourceType) => {
   // Resolve to an AWS URL
-  if (resourceType === "Style" && !url?.includes("://")) {
+  if (resourceType === 'Style' && !url?.includes('://')) {
     url = `https://maps.geo.${awsconfig.aws_project_region}.amazonaws.com/maps/v0/maps/${url}/style-descriptor`;
   }
 
   // Only sign AWS requests (with the signature as part of the query string)
-  if (url?.includes("amazonaws.com")) {
+  if (url?.includes('amazonaws.com')) {
     return {
       url: Signer.signUrl(url, {
         access_key: credentials.accessKeyId,
@@ -55,7 +60,7 @@ const transformRequest = (credentials) => (url, resourceType) => {
   }
 
   // Don't sign
-  return { url: url || "" };
+  return { url: url || '' };
 };
 
 function App() {
@@ -68,9 +73,13 @@ function App() {
     let currCredentials;
     try {
       currCredentials = await Auth.currentCredentials();
-      if ("sessionToken" in currCredentials) {
+      if ('sessionToken' in currCredentials) {
+        // Retrieve User Data
+        const session = await Auth.currentSession();
+        user = session.idToken.payload;
+        user.username = user['cognito:username'];
         return setCredentials(currCredentials);
-      } else throw new Error("Not Authenticated");
+      } else throw new Error('Not Authenticated');
     } catch (err) {
       alert(err);
       return null;
@@ -95,6 +104,7 @@ function App() {
   useEffect(() => {
     if (credentials && !client) {
       initLocationClient(credentials);
+      InitSDK(credentials);
     }
   }, [credentials]);
   useEffect(() => {
@@ -182,7 +192,7 @@ function App() {
     )), [markers]
   );
   
-  const reverseSearchPlace = (userCoordinates) => {
+  const reverseSearchPlace = (userCoordinates, timestamp) => {
 
     const params = {
       IndexName: indexName,
@@ -194,18 +204,27 @@ function App() {
       if (err) console.error(err);
       if (data) {
 
-        // Show popup if user place changed
-        if (placeLabel !== data.Results[0].Place.Label){
+        const newPlaceLabel = data.Results[0].Place.Label;
+        // User place changed
+        if (placeLabel !== newPlaceLabel){
+          // Show feedback popup
           setIsOpen(false);
           toggleWindowPopup();
+          // Update DB table
+          UpdateUserPositionDDB({
+            username: user.username,
+            timestamp: timestamp,
+            userCoordinates: userCoordinates,
+            placeLabel: newPlaceLabel
+          });
+          placeLabel = newPlaceLabel; // Update place label
         }
-        placeLabel = data.Results[0].Place.Label;
         
         setUserLocation({
           longitude: userCoordinates[0],
           latitude: userCoordinates[1],
-          place: placeLabel.split(', ')[0],
-          address: placeLabel.split(', ').slice(1).join(', '),
+          place: newPlaceLabel.split(', ')[0],
+          address: newPlaceLabel.split(', ').slice(1).join(', '),
         });
       }
       return;
@@ -223,21 +242,21 @@ function App() {
     if (geolocation != null) {
       const userCoordinates = [geolocation.coords.longitude, geolocation.coords.latitude];
       //console.log(`userCoordinates: ${userCoordinates}\n`);
-      reverseSearchPlace(userCoordinates);
+      reverseSearchPlace(userCoordinates, geolocation.timestamp);
     };
   };
 
   // RETURN
   return (
-    <div className="App">
-      <header className="App-header">
+    <div className='App'>
+      <header className='App-header'>
           <h1>Amazon CrowdGuard</h1>
       </header>
       <div>
       <AmplifyAuthenticator>
-      <div className="container">
-        <div className="row">
-          <div className="col">
+      <div className='container'>
+        <div className='row'>
+          <div className='col'>
             <Search searchPlace = {searchPlace} />
           </div>
           <AmplifySignOut/>
@@ -246,16 +265,16 @@ function App() {
       {credentials ? (
           <ReactMapGL
             {...viewport}
-            width="100vw"
-            height="100vh"
+            width='100vw'
+            height='90vh'
             transformRequest={transformRequest(credentials)}
             mapStyle={mapName}
             onViewportChange={setViewport}
           >
-            <div className="nav" style={navControlStyle}>
+            <div className='nav' style={navControlStyle}>
               <NavigationControl showCompass={false}/>
             </div>
-            <div className="nav" style={geolocateControlStyle}>
+            <div className='nav' style={geolocateControlStyle}>
               <GeolocateControl
                 onGeolocate={onGeolocate}
                 positionOptions={{enableHighAccuracy: true}}
@@ -268,8 +287,8 @@ function App() {
             {mapMarkers}
             {popupInfo && (
               <Popup
-                tipSize={5}
-                anchor="top"
+                tipSize={10}
+                anchor='top'
                 longitude={popupInfo.longitude}
                 latitude={popupInfo.latitude}
                 closeOnClick={false}
@@ -284,8 +303,8 @@ function App() {
               buttons={<>
                 <button 
                   onClick={ toggleWindowPopup } 
-                  className="btn btn-secondary" 
-                  type="submit">Close</button>
+                  className='btn btn-secondary' 
+                  type='submit'>Close</button>
               </>}
               handleClose={toggleWindowPopup}
               userLocation={userLocation}
