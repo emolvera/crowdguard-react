@@ -3,6 +3,9 @@
 
 import React, { useState } from 'react';
 import awsmobile from '../aws-exports';
+import swal from 'sweetalert';
+
+import { toggleWindowPopup } from '../App';
 
 // Load the AWS SDK for Node.js
 var AWS = require('aws-sdk');
@@ -82,3 +85,38 @@ export function UpdateUserPositionDDB (props){
     }
   });
 };
+
+// Submit user feedback to DDB table
+export function submitUserFeedback (username, value) {
+    
+    console.log(`${username} ${value}`);
+
+    var params = {
+        TableName: 'crowdguard-user-position',
+        Key:{ 'userId': username },
+        UpdateExpression: 'SET userFeedback=:userFeedback',
+        ExpressionAttributeValues:{
+          ':userFeedback':value,
+        }
+      };
+    
+    ddb.update(params, function(err, data) {
+      if (err) {
+          console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+      } else {
+          console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
+      }
+    });
+
+    swal({
+      title: "Thanks for your feedback!",
+      text: "You can close this window now",
+      icon: "success",
+      dangerMode: false,
+    })
+    .then(success => {
+      if (success) {
+        toggleWindowPopup();
+      }
+    });
+}

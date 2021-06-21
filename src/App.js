@@ -15,7 +15,7 @@ import {
   Search,
   UpdateUserPositionDDB
 } from './components/Places';
-import WindowPopup from './components/WindowPopup';
+import { WindowPopup } from './components/WindowPopup';
 import Pin from './components/Pin';
 
 import ReactMapGL, {
@@ -62,6 +62,11 @@ const transformRequest = (credentials) => (url, resourceType) => {
   // Don't sign
   return { url: url || '' };
 };
+
+var isOpen = false;
+export const toggleWindowPopup = () => {
+  isOpen = !isOpen;
+}
 
 function App() {
 
@@ -208,7 +213,6 @@ function App() {
         // User place changed
         if (placeLabel !== newPlaceLabel){
           // Show feedback popup
-          setIsOpen(false);
           toggleWindowPopup();
           // Update DB table
           UpdateUserPositionDDB({
@@ -229,12 +233,6 @@ function App() {
       }
       return;
     });
-  }
-
-  // Define WindowPopup
-  const [isOpen, setIsOpen] = useState(false);
-  const toggleWindowPopup = () => {
-    setIsOpen(!isOpen);
   }
 
   // Get User Geolocation
@@ -299,16 +297,12 @@ function App() {
                 <span>{popupInfo.address}</span>
               </Popup>
             )}
-            {isOpen && <WindowPopup
-              buttons={<>
-                <button 
-                  onClick={ toggleWindowPopup } 
-                  className='btn btn-secondary' 
-                  type='submit'>Close</button>
-              </>}
-              handleClose={toggleWindowPopup}
+            {isOpen && (
+              <WindowPopup
               userLocation={userLocation}
-            />}
+              user={user}
+              />
+            )}
           </ReactMapGL>
       ) : (
         <h1>Loading...</h1>
