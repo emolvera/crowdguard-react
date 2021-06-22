@@ -10,7 +10,7 @@ import { AmplifyAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react';
 import { Signer } from "@aws-amplify/core";
 import Location from "aws-sdk/clients/location";
 
-import { Search } from './components/Places';
+import { Search } from './components/Search';
 import WindowPopup from './components/WindowPopup';
 import Pin from './components/Pin';
 
@@ -98,7 +98,7 @@ function App() {
     }
   }, [credentials]);
   useEffect(() => {
-    if (client && credentials){}
+    if (client && credentials) { }
   }, [client]);
 
   const [viewport, setViewport] = useState({
@@ -120,40 +120,42 @@ function App() {
     left: 0,
     padding: '10px'
   };
-  
-  const geolocateControlStyle= {
+
+  const geolocateControlStyle = {
     position: 'absolute',
     left: 0,
     margin: 0,
     padding: '10px',
   };
-  
+
   // Create React Map Gl Place Markers & Popups
   const [markers, setMarkers] = useState([]);
   const [popupInfo, setPopupInfo] = useState(null);
-  
-  const searchPlace = (place) => {
 
+  const [searchResults, setSearchResults] = useState(null);
+  const searchPlace = (placeSearch) => {
     const params = {
       IndexName: indexName,
-      Text: place,
-      BiasPosition: [viewport.longitude,viewport.latitude],
+      Text: placeSearch,
+      BiasPosition: [viewport.longitude, viewport.latitude],
       /*FilterBBox: [ viewport.longitude-coordRange, viewport.latitude-coordRange, viewport.longitude+coordRange, viewport.latitude+coordRange]*/
     };
-    
     client.searchPlaceIndexForText(params, (err, data) => {
       if (err) console.error(err);
-      
       if (data) {
+        setSearchResults(data.Results);
+        /////////////////////////////////
         var n = Math.min(maxPlaces, data.Results.length);
         setMarkers(data.Results.slice(0, n));
-        
         const coordinates = data.Results[0].Place.Geometry.Point;
         const label = data.Results[0].Place.Label;
+
         setViewport({
           longitude: coordinates[0],
           latitude: coordinates[1],
-          zoom: 14});
+          zoom: 14
+        });
+
         setPopupInfo({  // Show Popoup for closest Pin
           key: 'marker0',
           longitude: coordinates[0],
@@ -161,12 +163,14 @@ function App() {
           place: label.split(', ')[0],
           address: label.split(', ').slice(1).join(', ')
         });
+        /////////////////////////////////
       }
     });
+    //console.log(searchResults); BORRAR
   }
 
- // Create React Map Gl markers.
-  const mapMarkers = React.useMemo( () =>
+  // Create React Map Gl markers.
+  const mapMarkers = React.useMemo(() =>
     markers.map((places, index) => (
       <Marker
         key={`marker${index}`}
@@ -181,7 +185,7 @@ function App() {
       </Marker>
     )), [markers]
   );
-  
+
   const reverseSearchPlace = (userCoordinates) => {
 
     const params = {
@@ -195,12 +199,12 @@ function App() {
       if (data) {
 
         // Show popup if user place changed
-        if (placeLabel !== data.Results[0].Place.Label){
+        if (placeLabel !== data.Results[0].Place.Label) {
           setIsOpen(false);
           toggleWindowPopup();
         }
         placeLabel = data.Results[0].Place.Label;
-        
+
         setUserLocation({
           longitude: userCoordinates[0],
           latitude: userCoordinates[1],
@@ -231,70 +235,75 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-          <h1>Amazon CrowdGuard</h1>
+        <h1>Amazon CrowdGuard</h1>
       </header>
       <div>
-      <AmplifyAuthenticator>
-      <div className="container">
-        <div className="row">
-          <div className="col">
-            <Search searchPlace = {searchPlace} />
+        <AmplifyAuthenticator>
+          <div className="container">
+            <div className="row">
+              <div className="col">
+                <Search
+                  searchPlace={searchPlace}
+                  indexName={indexName}
+                  viewport={setViewport}
+                  client={setLocationClient}
+                />
+              </div>
+              <AmplifySignOut />
+            </div>
           </div>
-          <AmplifySignOut/>
-        </div>
-      </div>
-      {credentials ? (
-          <ReactMapGL
-            {...viewport}
-            width="100vw"
-            height="100vh"
-            transformRequest={transformRequest(credentials)}
-            mapStyle={mapName}
-            onViewportChange={setViewport}
-          >
-            <div className="nav" style={navControlStyle}>
-              <NavigationControl showCompass={false}/>
-            </div>
-            <div className="nav" style={geolocateControlStyle}>
-              <GeolocateControl
-                onGeolocate={onGeolocate}
-                positionOptions={{enableHighAccuracy: true}}
-                trackUserLocation={true}
-                showUserLocation={true}
-                showAccuracyCircle={true}
-                auto
-              />
-            </div>
-            {mapMarkers}
-            {popupInfo && (
-              <Popup
-                tipSize={5}
-                anchor="top"
-                longitude={popupInfo.longitude}
-                latitude={popupInfo.latitude}
-                closeOnClick={false}
-                onClose={setPopupInfo}
-              >
-                <span><b>{popupInfo.place}</b></span>
-                <br/>
-                <span>{popupInfo.address}</span>
-              </Popup>
-            )}
-            {isOpen && <WindowPopup
-              buttons={<>
-                <button 
-                  onClick={ toggleWindowPopup } 
-                  className="btn btn-secondary" 
-                  type="submit">Close</button>
-              </>}
-              handleClose={toggleWindowPopup}
-              userLocation={userLocation}
-            />}
-          </ReactMapGL>
-      ) : (
-        <h1>Loading...</h1>
-      )}
-      </AmplifyAuthenticator>
+          {credentials ? (
+            <ReactMapGL
+              {...viewport}
+              width="100vw"
+              height="100vh"
+              transformRequest={transformRequest(credentials)}
+              mapStyle={mapName}
+              onViewportChange={setViewport}
+            >
+              <div className="nav" style={navControlStyle}>
+                <NavigationControl showCompass={false} />
+              </div>
+              <div className="nav" style={geolocateControlStyle}>
+                <GeolocateControl
+                  onGeolocate={onGeolocate}
+                  positionOptions={{ enableHighAccuracy: true }}
+                  trackUserLocation={true}
+                  showUserLocation={true}
+                  showAccuracyCircle={true}
+                  auto
+                />
+              </div>
+              {mapMarkers}
+              {popupInfo && (
+                <Popup
+                  tipSize={5}
+                  anchor="top"
+                  longitude={popupInfo.longitude}
+                  latitude={popupInfo.latitude}
+                  closeOnClick={false}
+                  onClose={setPopupInfo}
+                >
+                  <span><b>{popupInfo.place}</b></span>
+                  <br />
+                  <span>{popupInfo.address}</span>
+                </Popup>
+              )}
+              {isOpen && <WindowPopup
+                buttons={<>
+                  <button
+                    onClick={toggleWindowPopup}
+                    className="btn btn-secondary"
+                    type="submit">Close</button>
+                </>}
+                handleClose={toggleWindowPopup}
+                userLocation={userLocation}
+              />}
+            </ReactMapGL>
+          ) : (
+            <h1>Loading...</h1>
+          )}
+        </AmplifyAuthenticator>
       </div>
     </div>
   );
