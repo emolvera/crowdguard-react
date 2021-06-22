@@ -1,44 +1,63 @@
-import React from 'react';
-
-import happy    from '../img/happy.png';
-import neutral  from '../img/neutral.png';
-import sad      from '../img/sad.png';
+import Swal from 'sweetalert2'
 
 import { submitUserFeedback} from './Places';
-import { toggleWindowPopup } from '../App';
 
-export const WindowPopup = props => {
-  return (
-    <div className='popup-box'>
-      <div className='box'>
-        <span className='close-icon' onClick={toggleWindowPopup}>x</span>
-        <b>You are in {props.userLocation.place}</b>
-        <p>
-          {props.userLocation.address}
-        </p>
+export function showFeedbackAlert(props){
+  
+  Swal.fire({
+    title: 'How is this place?',
+    icon: 'question',
+    showCloseButton: true,
+    allowEnterKey: false,
+    // Button 1
+    showConfirmButton: true,
+    confirmButtonText: 'Empty',
+    confirmButtonColor: '#75c74c',
+    // Button 2
+    showDenyButton: true,
+    denyButtonText: 'Normal',
+    denyButtonColor: '#eebb3e',
+    // Button 3
+    showCancelButton: true,
+    cancelButtonText: `It's Full`,
+    cancelButtonColor: '#df5f57',
+    html: `
+        You are in <b>${props.place}</b>
         <br/>
-        <p>
-          <img height="40" src={happy} alt='' onClick={() => submitUserFeedback(props.user.username, 1)} />
-          The place is empty
-        </p>
-        <p>
-          <img height="40" src={neutral} alt='' onClick={() => submitUserFeedback(props.user.username, 2)} />
-          The place is normal
-        </p>
-        <p>
-          <img height="40" src={sad} alt='' onClick={() => submitUserFeedback(props.user.username, 3)} />
-          The place is full
-        </p>
-        <button 
-          onClick={ toggleWindowPopup } 
-          className='btn btn-secondary' 
-          type='submit'
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  );
+        ${props.address}.`
+  }).then((result) => {
+    console.log(result);
+      // Button 1
+    if (result.isConfirmed) {
+      submitUserFeedback(props.username, 1);
+    } // Button 2
+    else if (result.isDenied) {   
+      submitUserFeedback(props.username, 2);
+    } // Button 3
+    else if (result.isDismissed && result.dismiss==='cancel') {
+      submitUserFeedback(props.username, 3);
+    }
+  });
 };
 
-export default WindowPopup;
+export function showErrorAlert(){
+  Swal.fire({
+    title: 'There was an error submitting your feedback.',
+    text: 'Please try again.',
+    icon: 'error',
+    allowEnterKey: false,
+    confirmButtonText: 'Close',
+    confirmButtonColor: '#aaa'
+  })
+};
+
+export function showSuccessAlert(){
+  Swal.fire({
+    title: 'Thanks for your feedback!',
+    text: 'You can close this window now.',
+    icon: 'success',
+    allowEnterKey: false,
+    confirmButtonText: 'Close',
+    confirmButtonColor: '#aaa'
+  });
+};

@@ -15,7 +15,9 @@ import {
   Search,
   UpdateUserPositionDDB
 } from './components/Places';
-import { WindowPopup } from './components/WindowPopup';
+import {
+    showFeedbackAlert
+} from './components/WindowPopup';
 import Pin from './components/Pin';
 
 import ReactMapGL, {
@@ -26,8 +28,6 @@ import ReactMapGL, {
 } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-import awsconfig from './aws-exports';
-
 const mapName = 'crowdguard-map'; // HERE IT GOES THE NAME OF YOUR MAP
 const indexName = 'crowdguard-placeindex'; // HERE GOES THE NAME OF YOUR PLACE INDEX
 //const trackerName = 'crowdguard-tracker' // HERE GOES THE NAME OF  YOUR TRACKER
@@ -37,7 +37,7 @@ const maxPlaces = 15;     // Max number search results to display on the map
 var placeLabel = '';
 var user = null;
 
-Amplify.configure(awsconfig);
+Amplify.configure(awsmobile);
 
 /**
 * Sign requests made by Mapbox GL using AWS SigV4.
@@ -45,7 +45,7 @@ Amplify.configure(awsconfig);
 const transformRequest = (credentials) => (url, resourceType) => {
   // Resolve to an AWS URL
   if (resourceType === 'Style' && !url?.includes('://')) {
-    url = `https://maps.geo.${awsconfig.aws_project_region}.amazonaws.com/maps/v0/maps/${url}/style-descriptor`;
+    url = `https://maps.geo.${awsmobile.aws_project_region}.amazonaws.com/maps/v0/maps/${url}/style-descriptor`;
   }
 
   // Only sign AWS requests (with the signature as part of the query string)
@@ -62,11 +62,6 @@ const transformRequest = (credentials) => (url, resourceType) => {
   // Don't sign
   return { url: url || '' };
 };
-
-var isOpen = false;
-export const toggleWindowPopup = () => {
-  isOpen = !isOpen;
-}
 
 function App() {
 
@@ -208,12 +203,25 @@ function App() {
     client.searchPlaceIndexForPosition(params, (err, data) => {
       if (err) console.error(err);
       if (data) {
-
         const newPlaceLabel = data.Results[0].Place.Label;
+        const place = newPlaceLabel.split(', ')[0];
+        const address = newPlaceLabel.split(', ').slice(1).join(', ');
+
+        setUserLocation({
+          longitude: userCoordinates[0],
+          latitude: userCoordinates[1],
+          place: place,
+          address: address
+        });
+        
         // User place changed
         if (placeLabel !== newPlaceLabel){
           // Show feedback popup
-          toggleWindowPopup();
+          showFeedbackAlert({
+            username: user.username,
+            place: place,
+            address: address
+          });
           // Update DB table
           UpdateUserPositionDDB({
             username: user.username,
@@ -223,13 +231,6 @@ function App() {
           });
           placeLabel = newPlaceLabel; // Update place label
         }
-        
-        setUserLocation({
-          longitude: userCoordinates[0],
-          latitude: userCoordinates[1],
-          place: newPlaceLabel.split(', ')[0],
-          address: newPlaceLabel.split(', ').slice(1).join(', '),
-        });
       }
       return;
     });
@@ -296,12 +297,6 @@ function App() {
                 <br/>
                 <span>{popupInfo.address}</span>
               </Popup>
-            )}
-            {isOpen && (
-              <WindowPopup
-              userLocation={userLocation}
-              user={user}
-              />
             )}
           </ReactMapGL>
       ) : (

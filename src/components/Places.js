@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: MIT-0
 
 import React, { useState } from 'react';
-import awsmobile from '../aws-exports';
-import swal from 'sweetalert';
 
-import { toggleWindowPopup } from '../App';
+import awsmobile from '../aws-exports';
+import {
+  showErrorAlert,
+  showSuccessAlert
+} from './WindowPopup';
 
 // Load the AWS SDK for Node.js
 var AWS = require('aws-sdk');
@@ -22,7 +24,7 @@ export function InitSDK (credentials){
 // Search place index
 export function Search(props){
 
-  const [place, setPlace] = useState('Seattle');
+  const [place, setPlace] = useState('');
   
   const handleChange = (event) => {
     setPlace(event.target.value);
@@ -88,35 +90,24 @@ export function UpdateUserPositionDDB (props){
 
 // Submit user feedback to DDB table
 export function submitUserFeedback (username, value) {
-    
-    console.log(`${username} ${value}`);
+    //console.log(`${username} ${value}`);
 
     var params = {
-        TableName: 'crowdguard-user-position',
-        Key:{ 'userId': username },
-        UpdateExpression: 'SET userFeedback=:userFeedback',
-        ExpressionAttributeValues:{
-          ':userFeedback':value,
-        }
-      };
+      TableName: 'crowdguard-user-position',
+      Key:{ 'userId': username },
+      UpdateExpression: 'SET userFeedback=:userFeedback',
+      ExpressionAttributeValues:{
+        ':userFeedback':value,
+      }
+    };
     
     ddb.update(params, function(err, data) {
       if (err) {
           console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+          showErrorAlert();
       } else {
           console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
-      }
-    });
-
-    swal({
-      title: "Thanks for your feedback!",
-      text: "You can close this window now",
-      icon: "success",
-      dangerMode: false,
-    })
-    .then(success => {
-      if (success) {
-        toggleWindowPopup();
+          showSuccessAlert();
       }
     });
 }
