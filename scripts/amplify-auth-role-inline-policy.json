@@ -26,7 +26,8 @@
                 "dynamodb:Query",
                 "dynamodb:Scan",
                 "dynamodb:PartiQLSelect",
-                "dynamodb:UpdateItem"
+                "dynamodb:UpdateItem",
+                "dynamodb:PutItem"
             ],
             "Resource": "arn:aws:dynamodb:us-west-2:811400410548:table/crowdguard-*"
         }

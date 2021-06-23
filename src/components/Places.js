@@ -71,7 +71,10 @@ export function UpdateUserPositionDDB (props){
   var params = {
     TableName: 'crowdguard-user-position',
     Key:{ 'userId': props.username },
-    UpdateExpression: 'SET unixTimestamp=:unixTimestamp, userCoordinates=:userCoordinates, placeLabel=:placeLabel',
+    UpdateExpression: `SET
+        unixTimestamp=:unixTimestamp,
+        userCoordinates=:userCoordinates,
+        placeLabel=:placeLabel`,
     ExpressionAttributeValues:{
       ':unixTimestamp':props.timestamp,
       ':userCoordinates':props.userCoordinates,
@@ -95,7 +98,8 @@ export function submitUserFeedback (username, value) {
     var params = {
       TableName: 'crowdguard-user-position',
       Key:{ 'userId': username },
-      UpdateExpression: 'SET userFeedback=:userFeedback',
+      UpdateExpression: `SET
+        userFeedback=:userFeedback`,
       ExpressionAttributeValues:{
         ':userFeedback':value,
       }
