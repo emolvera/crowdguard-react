@@ -79,11 +79,14 @@ export function UpdateUserPositionDDB(props) {
     UpdateExpression: `SET
         unixTimestamp=:unixTimestamp,
         userCoordinates=:userCoordinates,
-        placeLabel=:placeLabel`,
+        placeLabel=:placeLabel,
+        timestampTTL=:timestampTTL`,
     ExpressionAttributeValues: {
       ':unixTimestamp': props.timestamp,
       ':userCoordinates': props.userCoordinates,
-      ':placeLabel': props.placeLabel
+      ':placeLabel': props.placeLabel,
+      // Expire within 2 hrs
+      ':timestampTTL': parseInt(props.timestamp/1000) + 7200
     }
   };
 
