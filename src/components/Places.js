@@ -13,33 +13,38 @@ import {
 var AWS = require('aws-sdk');
 var ddb = null; // DynamoDB service object
 
+// DynamoDB Table Names
+const USER_TABLE_NAME = 'crowdguard-user-position';
+const PLACE_TABLE_NAME = 'crowdguard-place-status-mock';
+// const PLACE_TABLE_NAME  = 'crowdguard-place-status';
+
 // Set SDK credentials with Cognito Identity Pool
-export function InitSDK (credentials){
+export function InitSDK(credentials) {
   AWS.config.credentials = credentials;
-  AWS.config.update({region: awsmobile.aws_project_region});
+  AWS.config.update({ region: awsmobile.aws_project_region });
   // Init DynamoDB service object
   ddb = new AWS.DynamoDB.DocumentClient();
 };
 
 // Search place index
-export function Search(props){
+export function Search(props) {
 
   const [place, setPlace] = useState('');
-  
+
   const handleChange = (event) => {
     setPlace(event.target.value);
   }
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
       handleClick(event);
-    }   
+    }
   }
 
   const handleClick = (event) => {
     event.preventDefault();
     props.searchPlace(place)
   }
-  
+
   return (
     <div className="container">
       <div className="input-group">
@@ -49,13 +54,13 @@ export function Search(props){
           placeholder="Search for Places"
           aria-label="Place"
           aria-describedby="basic-addon2"
-          value={ place }
+          value={place}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
         />
         <div className="input-group-append">
           <button
-            onClick={ handleClick }
+            onClick={handleClick}
             className="btn btn-primary"
             type="submit">Search
           </button>
@@ -66,52 +71,63 @@ export function Search(props){
 };
 
 // Update DynamoDB table with user location
-export function UpdateUserPositionDDB (props){ 
+export function UpdateUserPositionDDB(props) {
 
   var params = {
-    TableName: 'crowdguard-user-position',
-    Key:{ 'userId': props.username },
+    TableName: USER_TABLE_NAME,
+    Key: { 'userId': props.username },
     UpdateExpression: `SET
         unixTimestamp=:unixTimestamp,
         userCoordinates=:userCoordinates,
         placeLabel=:placeLabel`,
-    ExpressionAttributeValues:{
-      ':unixTimestamp':props.timestamp,
-      ':userCoordinates':props.userCoordinates,
-      ':placeLabel':props.placeLabel
+    ExpressionAttributeValues: {
+      ':unixTimestamp': props.timestamp,
+      ':userCoordinates': props.userCoordinates,
+      ':placeLabel': props.placeLabel
     }
   };
 
-  ddb.update(params, function(err, data) {
-    if (err) {
-        console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
-    } else {
-        console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
-    }
+  ddb.update(params, function (err, data) {
+    if (err) console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+    // else console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
   });
 };
 
 // Submit user feedback to DDB table
-export function submitUserFeedback (username, value) {
-    //console.log(`${username} ${value}`);
+export function submitUserFeedback(username, value) {
 
-    var params = {
-      TableName: 'crowdguard-user-position',
-      Key:{ 'userId': username },
-      UpdateExpression: `SET
+  var params = {
+    TableName: USER_TABLE_NAME,
+    Key: { 'userId': username },
+    UpdateExpression: `SET
         userFeedback=:userFeedback`,
-      ExpressionAttributeValues:{
-        ':userFeedback':value,
-      }
-    };
-    
-    ddb.update(params, function(err, data) {
-      if (err) {
-          console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
-          showErrorAlert();
-      } else {
-          console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
-          showSuccessAlert();
-      }
-    });
+    ExpressionAttributeValues: {
+      ':userFeedback': value,
+    }
+  };
+
+  ddb.update(params, function (err, data) {
+    if (err) {
+      console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+      showErrorAlert();
+    } else {
+      //console.log("UpdateItem succeeded:", JSON.stringify(data, null, 2));
+      showSuccessAlert();
+    }
+  });
+}
+
+// Query crowdguard-place-status-mock table
+export const GetPlaceStatus = async (placeLabel) => {
+
+  var params = {
+    TableName: PLACE_TABLE_NAME,
+    KeyConditionExpression: '#placeLabel=:placeLabel',
+    ExpressionAttributeNames: { '#placeLabel': 'placeLabel' },
+    ExpressionAttributeValues: { ":placeLabel": placeLabel }
+    // sort key 'unixTimestamp' is optional
+  };
+
+  var value = await ddb.query(params).promise()
+  return value.Items;
 }

@@ -13,12 +13,14 @@ import Location from 'aws-sdk/clients/location';
 import {
   InitSDK,
   Search,
-  UpdateUserPositionDDB
+  UpdateUserPositionDDB,
+  GetPlaceStatus
 } from './components/Places';
 import {
-    showFeedbackAlert
+  showFeedbackAlert
 } from './components/WindowPopup';
 import Pin from './components/Pin';
+import { trafficLight } from './components/Pin';
 
 import ReactMapGL, {
   Popup,
@@ -108,7 +110,7 @@ function App() {
     }
   }, [credentials]);
   useEffect(() => {
-    if (client && credentials){}
+    if (client && credentials) { }
   }, [client]);
 
   const [viewport, setViewport] = useState({
@@ -130,68 +132,104 @@ function App() {
     left: 0,
     padding: '10px'
   };
-  
-  const geolocateControlStyle= {
+
+  const geolocateControlStyle = {
     position: 'absolute',
     left: 0,
     margin: 0,
     padding: '10px',
   };
-  
+
   // Create React Map Gl Place Markers & Popups
   const [markers, setMarkers] = useState([]);
   const [popupInfo, setPopupInfo] = useState(null);
-  
-  const searchPlace = (place) => {
+
+  const searchPlace = async (place) => {
 
     const params = {
       IndexName: indexName,
       Text: place,
-      BiasPosition: [viewport.longitude,viewport.latitude],
+      BiasPosition: [viewport.longitude, viewport.latitude],
+      MaxResults: maxPlaces
       /*FilterBBox: [ viewport.longitude-coordRange, viewport.latitude-coordRange, viewport.longitude+coordRange, viewport.latitude+coordRange]*/
     };
-    
-    client.searchPlaceIndexForText(params, (err, data) => {
+
+    client.searchPlaceIndexForText(params, async (err, data) => {
       if (err) console.error(err);
-      
+
       if (data) {
-        var n = Math.min(maxPlaces, data.Results.length);
-        setMarkers(data.Results.slice(0, n));
         
-        const coordinates = data.Results[0].Place.Geometry.Point;
-        const label = data.Results[0].Place.Label;
+        const n = Math.min(maxPlaces, data.Results.length);
+        var placeData = data.Results.slice(0, n)
+
+        // Append Status to data result
+        for (let i=0; i<n; i++){
+          var thisLabel = placeData[i].Place.Label;
+          var userData = await GetPlaceStatus(thisLabel);
+          // Sort in descending order accorting to unixTimestamp
+          var sortedUserData = userData.sort(
+            (a, b) => b.unixTimestamp - a.unixTimestamp
+          );
+          placeData[i]['userData'] = sortedUserData;
+        };
+        
+        const coordinates = placeData[0].Place.Geometry.Point;
+        const label = placeData[0].Place.Label;
+
+        setMarkers(placeData);
+
         setViewport({
           longitude: coordinates[0],
           latitude: coordinates[1],
-          zoom: 14});
-        setPopupInfo({  // Show Popoup for closest Pin
-          key: 'marker0',
-          longitude: coordinates[0],
-          latitude: coordinates[1],
-          place: label.split(', ')[0],
-          address: label.split(', ').slice(1).join(', ')
+          zoom: 14
         });
+        // if UserData exists
+        if (placeData[0].userData.length > 0) {
+          var thisUserData = placeData[0].userData[0];
+          setPopupInfo({  // Show Popoup for closest Pin
+            key: 'marker0',
+            longitude: coordinates[0],
+            latitude: coordinates[1],
+            place: label.split(', ')[0],
+            address: label.split(', ').slice(1).join(', '),
+            unixTimestamp: thisUserData.unixTimestamp,
+            userCount: thisUserData.userCount,
+            avgUserFeedback: Math.round(thisUserData.avgUserFeedback)
+          });
+        } // if UserData does not exist
+        else {
+          setPopupInfo({  // Show Popoup for closest Pin
+            key: 'marker0',
+            longitude: coordinates[0],
+            latitude: coordinates[1],
+            place: label.split(', ')[0],
+            address: label.split(', ').slice(1).join(', '),
+            unixTimestamp: null,
+            userCount: null,
+            avgUserFeedback: null
+          });
+        };
       }
     });
   }
 
- // Create React Map Gl markers.
-  const mapMarkers = React.useMemo( () =>
-    markers.map((places, index) => (
+  // Create React Map Gl markers.
+  const mapMarkers = React.useMemo(() =>
+    markers.map((placeData, index) => (
       <Marker
         key={`marker${index}`}
-        longitude={places.Place.Geometry.Point[0]}
-        latitude={places.Place.Geometry.Point[1]}
+        longitude={placeData.Place.Geometry.Point[0]}
+        latitude={placeData.Place.Geometry.Point[1]}
       >
         <Pin
           key={`pin${index}`}
-          placeData={places.Place}
+          placeData={placeData}
           onClick={setPopupInfo}
         />
       </Marker>
     )), [markers]
   );
-  
+
   const reverseSearchPlace = (userCoordinates, timestamp) => {
 
     const params = {
@@ -213,9 +251,9 @@ function App() {
           place: place,
           address: address
         });
-        
+
         // User place changed
-        if (placeLabel !== newPlaceLabel){
+        if (placeLabel !== newPlaceLabel) {
           // Show feedback popup
           showFeedbackAlert({
             username: user.username,
@@ -245,64 +283,84 @@ function App() {
     };
   };
 
+  const addressStyle = {
+    color: 'gray',
+    fontSize: '12px'
+  };
+
   // RETURN
   return (
     <div className='App'>
       <header className='App-header'>
-          <h1>Amazon CrowdGuard</h1>
+        <h1>Amazon CrowdGuard</h1>
       </header>
       <div>
-      <AmplifyAuthenticator>
-      <div className='container'>
-        <div className='row'>
-          <div className='col'>
-            <Search searchPlace = {searchPlace} />
+        <AmplifyAuthenticator>
+          <div className='container'>
+            <div className='row'>
+              <div className='col'>
+                <Search searchPlace={searchPlace} />
+              </div>
+              <AmplifySignOut />
+            </div>
           </div>
-          <AmplifySignOut/>
-        </div>
-      </div>
-      {credentials ? (
-          <ReactMapGL
-            {...viewport}
-            width='100vw'
-            height='90vh'
-            transformRequest={transformRequest(credentials)}
-            mapStyle={mapName}
-            onViewportChange={setViewport}
-          >
-            <div className='nav' style={navControlStyle}>
-              <NavigationControl showCompass={false}/>
-            </div>
-            <div className='nav' style={geolocateControlStyle}>
-              <GeolocateControl
-                onGeolocate={onGeolocate}
-                positionOptions={{enableHighAccuracy: true}}
-                trackUserLocation={true}
-                showUserLocation={true}
-                showAccuracyCircle={true}
-                auto
-              />
-            </div>
-            {mapMarkers}
-            {popupInfo && (
-              <Popup
-                tipSize={10}
-                anchor='top'
-                longitude={popupInfo.longitude}
-                latitude={popupInfo.latitude}
-                closeOnClick={false}
-                onClose={setPopupInfo}
-              >
-                <span><b>{popupInfo.place}</b></span>
-                <br/>
-                <span>{popupInfo.address}</span>
-              </Popup>
-            )}
-          </ReactMapGL>
-      ) : (
-        <h1>Loading...</h1>
-      )}
-      </AmplifyAuthenticator>
+          {credentials ? (
+            <ReactMapGL
+              {...viewport}
+              width='100vw'
+              height='90vh'
+              transformRequest={transformRequest(credentials)}
+              mapStyle={mapName}
+              onViewportChange={setViewport}
+            >
+              <div className='nav' style={navControlStyle}>
+                <NavigationControl showCompass={false} />
+              </div>
+              <div className='nav' style={geolocateControlStyle}>
+                <GeolocateControl
+                  onGeolocate={onGeolocate}
+                  positionOptions={{ enableHighAccuracy: true }}
+                  trackUserLocation={true}
+                  showUserLocation={true}
+                  showAccuracyCircle={true}
+                  fitBoundsOptions={{maxZoom: 10}}
+                  auto
+                />
+              </div>
+              {mapMarkers}
+              {popupInfo && (
+                <Popup
+                  tipSize={15}
+                  anchor='top'
+                  longitude={popupInfo.longitude}
+                  latitude={popupInfo.latitude}
+                  closeOnClick={false}
+                  onClose={setPopupInfo}
+                >
+                  <span>
+                    <h4>
+                      {popupInfo.place}
+                    </h4>
+                    <p style={addressStyle}>
+                      {popupInfo.address}
+                    </p>
+                    {popupInfo.avgUserFeedback ? (
+                      <p>
+                        <b>{popupInfo.userCount} </b>users checked in
+                        <br/>
+                        {trafficLight(popupInfo.avgUserFeedback)}
+                      </p>
+                    ) : (
+                      <p>No user data</p>
+                    )}
+                  </span>
+                </Popup>
+              )}
+            </ReactMapGL>
+          ) : (
+            <h1>Loading...</h1>
+          )}
+        </AmplifyAuthenticator>
       </div>
     </div>
   );

@@ -26,7 +26,6 @@ export function showFeedbackAlert(props){
         <br/>
         ${props.address}.`
   }).then((result) => {
-    console.log(result);
       // Button 1
     if (result.isConfirmed) {
       submitUserFeedback(props.username, 1);
