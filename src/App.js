@@ -22,7 +22,11 @@ import {
   closeAlert
 } from './components/WindowPopup';
 import Pin from './components/Pin';
-import { trafficLight } from './components/Pin';
+import {
+    trafficLight,
+    isDataRecent,
+    dataRecency
+} from './components/Pin';
 
 import ReactMapGL, {
   Popup,
@@ -32,10 +36,10 @@ import ReactMapGL, {
 } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-const mapName = 'crowdguard-map'; // HERE IT GOES THE NAME OF YOUR MAP
+const mapName = 'crowdguard-map'; // HERE GOES THE NAME OF YOUR MAP
 const indexName = 'crowdguard-placeindex'; // HERE GOES THE NAME OF YOUR PLACE INDEX
-//const trackerName = 'crowdguard-tracker' // HERE GOES THE NAME OF  YOUR TRACKER
-//const deviceID = 'exampledevice' // HERE IT GOES THE NAME OF YOUR DEVICE
+//const trackerName = 'crowdguard-tracker' // HERE GOES THE NAME OF YOUR TRACKER
+//const deviceID = 'exampledevice' // HERE GOES THE NAME OF YOUR DEVICE
 
 const maxPlaces = 15;     // Max number search results to display on the map
 var placeLabel = '';
@@ -175,13 +179,27 @@ function App() {
           );
           placeData[i]['userData'] = sortedUserData;
         };
+        placeData = placeData.sort(  // Sort by status in ascending order
+          (a, b) => {
+            if (!a.userData.length && !b.userData.length){  // both are null
+              return 0;
+            }
+            if (!a.userData.length){   // a is null
+              return 4 - b.userData[0].avgUserFeedback;
+            }
+            if (!b.userData.length){   // b is null
+              return  a.userData[0].avgUserFeedback - 4;
+            }
+            return a.userData[0].avgUserFeedback - b.userData[0].avgUserFeedback;
+          }
+        );
+        setMarkers(placeData.reverse());  // Display empty markers on top
+        placeData.reverse(); // reverse again
         closeAlert();
         
+        // Display closest empty marker and popup
         const coordinates = placeData[0].Place.Geometry.Point;
         const label = placeData[0].Place.Label;
-
-        setMarkers(placeData);
-
         setViewport({
           longitude: coordinates[0],
           latitude: coordinates[1],
@@ -348,15 +366,16 @@ function App() {
                     <p style={addressStyle}>
                       {popupInfo.address}
                     </p>
-                    {popupInfo.avgUserFeedback ? (
-                      <p>
-                        <b>{popupInfo.userCount} </b>users checked in
-                        <br/>
-                        {trafficLight(popupInfo.avgUserFeedback)}
-                      </p>
-                    ) : (
-                      <p>No user data</p>
-                    )}
+                    {popupInfo.unixTimestamp ? (    // Is there user data?
+                      isDataRecent(popupInfo.unixTimestamp) ? (   // Is data recent?
+                        <span>
+                          <b>{popupInfo.userCount} </b>users checked in
+                          <br/>
+                          {trafficLight(popupInfo.avgUserFeedback)}
+                          {dataRecency(popupInfo.unixTimestamp)}
+                        </span>
+                      ) : ( <p>No recent user data</p> )
+                    ) : ( <p>No user data</p> )}
                   </span>
                 </Popup>
               )}

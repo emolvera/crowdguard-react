@@ -15,7 +15,7 @@ export function showFeedbackAlert(props){
     confirmButtonColor: '#75c74c',
     // Button 2
     showDenyButton: true,
-    denyButtonText: 'Normal',
+    denyButtonText: 'Moderate',
     denyButtonColor: '#eebb3e',
     // Button 3
     showCancelButton: true,
@@ -24,7 +24,7 @@ export function showFeedbackAlert(props){
     html: `
         You are in <b>${props.place}</b>
         <br/>
-        ${props.address}.`
+        ${props.address}`
   }).then((result) => {
       // Button 1
     if (result.isConfirmed) {
@@ -41,8 +41,8 @@ export function showFeedbackAlert(props){
 
 export function showErrorAlert(){
   Swal.fire({
-    title: 'There was an error submitting your feedback.',
-    text: 'Please try again.',
+    title: 'There was an error submitting your feedback',
+    text: 'Please try again',
     icon: 'error',
     allowEnterKey: false,
     confirmButtonText: 'Close',
@@ -53,7 +53,7 @@ export function showErrorAlert(){
 export function showSuccessAlert(){
   Swal.fire({
     title: 'Thanks for your feedback!',
-    text: 'You can close this window now.',
+    text: 'You can close this window now',
     icon: 'success',
     allowEnterKey: false,
     confirmButtonText: 'Close',
@@ -63,7 +63,7 @@ export function showSuccessAlert(){
 
 export function showLoadingAlert(){
     Swal.fire({
-        title: 'Loading...',
+        text: 'Loading...',
         showConfirmButton: false,
         showCloseButton: false,
         allowEnterKey: false,

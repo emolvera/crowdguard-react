@@ -21,7 +21,7 @@ const pinStyle = {
 
 const placeStatusText = {
   1: 'Empty',
-  2: 'Normal',
+  2: 'Moderate',
   3: 'Full'
 };
 
@@ -129,13 +129,45 @@ export function trafficLight(userFeedback){
   };
 
   return (
-    <p>
+    <div>
       Status: <b style={feedbackTextStyle}>{placeStatusText[userFeedback]} </b>
       <img
         alt=''
         height={size}
         src={lightImage}
       />
-    </p>
+    </div>
   );
+};
+
+const maxTimeDelta = 7200000; // 2 hrs TTL in ms
+export function isDataRecent(unixTimestamp){
+  return ( new Date() - unixTimestamp ) < maxTimeDelta;
+};
+
+
+const dataRecencyStyle = {
+    color: 'gray',
+    fontSize: '14px'
+};
+export function dataRecency(unixTimestamp) {
+  var today = new Date().getMinutes();
+  const dataDate = new Date(unixTimestamp).getMinutes();
+  if (dataDate > today) { // Catch negative difference
+    today += 60;
+  };
+  const minAgo = today - dataDate;
+
+  var returnData = null;
+  switch (minAgo) {
+    case 0:
+      returnData = <i style={dataRecencyStyle}>Updated a few seconds ago</i>;
+      break;
+    case 1:
+      returnData = <i style={dataRecencyStyle}>Updated a minute ago</i>;
+      break;
+    default:
+      returnData = <i style={dataRecencyStyle}>Updated {minAgo} minutes ago</i>;
+  }
+  return returnData;
 };

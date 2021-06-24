@@ -122,9 +122,11 @@ export const GetPlaceStatus = async (placeLabel) => {
 
   var params = {
     TableName: PLACE_TABLE_NAME,
-    KeyConditionExpression: '#placeLabel=:placeLabel',
-    ExpressionAttributeNames: { '#placeLabel': 'placeLabel' },
-    ExpressionAttributeValues: { ":placeLabel": placeLabel }
+    KeyConditionExpression: 'placeLabel = :placeLabel AND unixTimestamp >= :unixTimestamp',
+    ExpressionAttributeValues: {
+        ":placeLabel": placeLabel,
+        ':unixTimestamp': Date.now() - 604800000  // 1 week old data only
+    }
     // sort key 'unixTimestamp' is optional
   };
 
