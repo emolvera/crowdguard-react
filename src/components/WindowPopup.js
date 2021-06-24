@@ -60,3 +60,17 @@ export function showSuccessAlert(){
     confirmButtonColor: '#aaa'
   });
 };
+
+export function showLoadingAlert(){
+    Swal.fire({
+        title: 'Loading...',
+        showConfirmButton: false,
+        showCloseButton: false,
+        allowEnterKey: false,
+        showCancelButton: false
+      });
+};
+
+export function closeAlert(){
+    Swal.close();
+};

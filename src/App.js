@@ -17,7 +17,9 @@ import {
   GetPlaceStatus
 } from './components/Places';
 import {
-  showFeedbackAlert
+  showFeedbackAlert,
+  showLoadingAlert,
+  closeAlert
 } from './components/WindowPopup';
 import Pin from './components/Pin';
 import { trafficLight } from './components/Pin';
@@ -162,6 +164,7 @@ function App() {
         const n = Math.min(maxPlaces, data.Results.length);
         var placeData = data.Results.slice(0, n)
 
+        showLoadingAlert();
         // Append Status to data result
         for (let i=0; i<n; i++){
           var thisLabel = placeData[i].Place.Label;
@@ -172,6 +175,7 @@ function App() {
           );
           placeData[i]['userData'] = sortedUserData;
         };
+        closeAlert();
         
         const coordinates = placeData[0].Place.Geometry.Point;
         const label = placeData[0].Place.Label;
