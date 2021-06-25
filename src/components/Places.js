@@ -15,7 +15,7 @@ var ddb = null; // DynamoDB service object
 
 // DynamoDB Table Names
 const USER_TABLE_NAME = 'crowdguard-user-position';
-const PLACE_TABLE_NAME = 'crowdguard-place-status-mock';
+const PLACE_TABLE_NAME = 'crowdguard-place-status';
 // const PLACE_TABLE_NAME  = 'crowdguard-place-status';
 
 // Set SDK credentials with Cognito Identity Pool
