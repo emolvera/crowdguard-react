@@ -15,6 +15,21 @@
             "Effect": "Allow",
             "Action": "geo:GetDevicePositionHistory",
             "Resource": "arn:aws:geo:us-west-2:811400410548:tracker/crowdguard-tracker"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:Describe*",
+                "dynamodb:List*",
+                "dynamodb:GetItem",
+                "dynamodb:Query",
+                "dynamodb:Scan",
+                "dynamodb:PartiQLSelect",
+                "dynamodb:UpdateItem",
+                "dynamodb:PutItem"
+            ],
+            "Resource": "arn:aws:dynamodb:us-west-2:811400410548:table/crowdguard-*"
         }
     ]
 }

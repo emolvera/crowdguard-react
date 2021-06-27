@@ -15,7 +15,13 @@
     "react-dom": "^17.0.1",
     "react-map-gl": "^5.2.11",
     "react-scripts": "4.0.3",
+<<<<<<< HEAD
     "react-search-box": "^2.0.2",
+=======
+    "seedrandom": "^3.0.5",
+    "sweetalert": "^2.1.2",
+    "sweetalert2": "^11.0.18",
+>>>>>>> 1c4bd6e661a143065f42e6c6ecc866ddd3df80ef
     "web-vitals": "^1.0.1"
   },
   "scripts": {

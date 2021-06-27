@@ -1,26 +1,76 @@
-import React from 'react';
+import Swal from 'sweetalert2'
 
-import happy    from '../img/happy.png';
-import neutral  from '../img/neutral.png';
-import sad      from '../img/sad.png';
+import { submitUserFeedback} from './Places';
 
-const WindowPopup = props => {
-  return (
-    <div className='popup-box'>
-      <div className='box'>
-        <span className='close-icon' onClick={props.handleClose}>x</span>
-        <b>You are in {props.userLocation.place}</b>
-        <p>
-          {props.userLocation.address}
-          <br/>
-          <img height="40" src={happy} alt='' /*onClick={() => onClick()}*/ />
-          <img height="40" src={neutral} alt='' /*onClick={() => onClick()}*/ />
-          <img height="40" src={sad} alt='' /*onClick={() => onClick()}*/ />
-        </p>
-        {props.buttons}
-      </div>
-    </div>
-  );
+export function showFeedbackAlert(props){
+  
+  Swal.fire({
+    title: 'How is this place?',
+    icon: 'question',
+    showCloseButton: true,
+    allowEnterKey: false,
+    // Button 1
+    showConfirmButton: true,
+    confirmButtonText: 'Empty',
+    confirmButtonColor: '#75c74c',
+    // Button 2
+    showDenyButton: true,
+    denyButtonText: 'Moderate',
+    denyButtonColor: '#eebb3e',
+    // Button 3
+    showCancelButton: true,
+    cancelButtonText: `It's Full`,
+    cancelButtonColor: '#df5f57',
+    html: `
+        You are in <b>${props.place}</b>
+        <br/>
+        ${props.address}`
+  }).then((result) => {
+      // Button 1
+    if (result.isConfirmed) {
+      submitUserFeedback(props.username, 1);
+    } // Button 2
+    else if (result.isDenied) {   
+      submitUserFeedback(props.username, 2);
+    } // Button 3
+    else if (result.isDismissed && result.dismiss==='cancel') {
+      submitUserFeedback(props.username, 3);
+    }
+  });
 };
 
-export default WindowPopup;
+export function showErrorAlert(){
+  Swal.fire({
+    title: 'There was an error submitting your feedback',
+    text: 'Please try again',
+    icon: 'error',
+    allowEnterKey: false,
+    confirmButtonText: 'Close',
+    confirmButtonColor: '#aaa'
+  })
+};
+
+export function showSuccessAlert(){
+  Swal.fire({
+    title: 'Thanks for your feedback!',
+    text: 'You can close this window now',
+    icon: 'success',
+    allowEnterKey: false,
+    confirmButtonText: 'Close',
+    confirmButtonColor: '#aaa'
+  });
+};
+
+export function showLoadingAlert(){
+    Swal.fire({
+        text: 'Loading...',
+        showConfirmButton: false,
+        showCloseButton: false,
+        allowEnterKey: false,
+        showCancelButton: false
+      });
+};
+
+export function closeAlert(){
+    Swal.close();
+};
