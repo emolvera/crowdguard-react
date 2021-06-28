@@ -36,16 +36,6 @@ export default class Pin extends PureComponent {
 
     // if UserData exists
     if (userData.length > 0) {
-      /*// Append 
-      var unixTimestamp = [];
-      var userCount = [];
-      var avgUserFeedback = [];
-      for (let i=0; i<sortedUserData.length; i++){
-        var item = sortedUserData[i];
-        unixTimestamp.push(   item.unixTimestamp  );
-        userCount.push(       item.userCount      );
-        avgUserFeedback.push( item.avgUserFeedback);
-      };*/
       data = {
         longitude: coordinates[0],
         latitude: coordinates[1],
@@ -71,19 +61,25 @@ export default class Pin extends PureComponent {
 
     // Set colors
     var pinImage = null;
-    switch(data.avgUserFeedback) {
-      case 1:
-        pinImage = pinGreen;
-        break;
-      case 2:
-        pinImage = pinYellow;
-        break;
-      case 3:
-        pinImage = pinRed;
-        break;
-      default:
-        pinImage = pinGray;
-    };
+    // Set pin to grey if data is not recent
+    if (!isDataRecent(data.unixTimestamp)){
+      pinImage = pinGray;
+    }
+    else{ // Data is recent
+      switch(data.avgUserFeedback) {
+        case 1:
+          pinImage = pinGreen;
+          break;
+        case 2:
+          pinImage = pinYellow;
+          break;
+        case 3:
+          pinImage = pinRed;
+          break;
+        default:
+          pinImage = pinGray;
+      };
+    };  
     return (
       <img
         alt=''
@@ -141,7 +137,7 @@ export function trafficLight(userFeedback){
 };
 
 const maxTimeDelta = 7200000; // 2 hrs TTL in ms
-export function isDataRecent(unixTimestamp){
+export function isDataRecent(unixTimestamp) {
   return ( new Date() - unixTimestamp ) < maxTimeDelta;
 };
 
@@ -170,4 +166,12 @@ export function dataRecency(unixTimestamp) {
       returnData = <i style={dataRecencyStyle}>Updated {minAgo} minutes ago</i>;
   }
   return returnData;
+};
+
+export function setPlacePriority(userData) {
+  if (userData.length===0) return 4
+  else {
+    if (!isDataRecent(userData[0].unixTimestamp)) return 4
+    else return userData[0].avgUserFeedback;
+  };
 };

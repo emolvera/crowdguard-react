@@ -25,7 +25,8 @@ import Pin from './components/Pin';
 import {
     trafficLight,
     isDataRecent,
-    dataRecency
+    dataRecency,
+    setPlacePriority
 } from './components/Pin';
 
 import ReactMapGL, {
@@ -125,13 +126,6 @@ function App() {
     zoom: 1,
   });
 
-  const [userLocation, setUserLocation] = useState({
-    longitude: 0,
-    latitude: 0,
-    place: '',
-    address: ''
-  });
-
   const navControlStyle = {
     position: 'absolute',
     top: 36,
@@ -178,45 +172,38 @@ function App() {
             (a, b) => b.unixTimestamp - a.unixTimestamp
           );
           placeData[i]['userData'] = sortedUserData;
+          // Add helper attribute to compare pin order
+          placeData[i]['priority'] = setPlacePriority(sortedUserData);
         };
-        placeData = placeData.sort(  // Sort by status in ascending order
-          (a, b) => {
-            if (!a.userData.length && !b.userData.length){  // both are null
-              return 0;
-            }
-            if (!a.userData.length){   // a is null
-              return 4 - b.userData[0].avgUserFeedback;
-            }
-            if (!b.userData.length){   // b is null
-              return  a.userData[0].avgUserFeedback - 4;
-            }
-            return a.userData[0].avgUserFeedback - b.userData[0].avgUserFeedback;
-          }
-        );
-        setMarkers(placeData.reverse());  // Display empty markers on top
-        placeData.reverse(); // reverse again
+        
+        placeData.sort(   // Sort by priority in ascending order
+          (a, b) => (a.priority > b.priority) ? 1 : -1)
+        // Save closest empty marker and popup
+        const coordinates = placeData[0].Place.Geometry.Point;
+        const label = placeData[0].Place.Label;
+        const thisUserData = placeData[0].userData;
+        
+        // Display empty places on top
+        setMarkers(placeData.reverse());
         closeAlert();
         
         // Display closest empty marker and popup
-        const coordinates = placeData[0].Place.Geometry.Point;
-        const label = placeData[0].Place.Label;
         setViewport({
           longitude: coordinates[0],
           latitude: coordinates[1],
           zoom: 14
         });
         // if UserData exists
-        if (placeData[0].userData.length > 0) {
-          var thisUserData = placeData[0].userData[0];
+        if (thisUserData.length > 0) {
           setPopupInfo({  // Show Popoup for closest Pin
             key: 'marker0',
             longitude: coordinates[0],
             latitude: coordinates[1],
             place: label.split(', ')[0],
             address: label.split(', ').slice(1).join(', '),
-            unixTimestamp: thisUserData.unixTimestamp,
-            userCount: thisUserData.userCount,
-            avgUserFeedback: Math.round(thisUserData.avgUserFeedback)
+            unixTimestamp: thisUserData[0].unixTimestamp,
+            userCount: thisUserData[0].userCount,
+            avgUserFeedback: Math.round(thisUserData[0].avgUserFeedback)
           });
         } // if UserData does not exist
         else {
@@ -266,13 +253,6 @@ function App() {
         const newPlaceLabel = data.Results[0].Place.Label;
         const place = newPlaceLabel.split(', ')[0];
         const address = newPlaceLabel.split(', ').slice(1).join(', ');
-
-        setUserLocation({
-          longitude: userCoordinates[0],
-          latitude: userCoordinates[1],
-          place: place,
-          address: address
-        });
 
         // User place changed
         if (placeLabel !== newPlaceLabel) {
@@ -326,7 +306,7 @@ function App() {
               <AmplifySignOut />
             </div>
           </div>
-          {credentials ? (
+          { credentials ? (
             <ReactMapGL
               {...viewport}
               width='100vw'
@@ -380,9 +360,7 @@ function App() {
                 </Popup>
               )}
             </ReactMapGL>
-          ) : (
-            <h1>Loading...</h1>
-          )}
+          ) : (showLoadingAlert())}
         </AmplifyAuthenticator>
       </div>
     </div>

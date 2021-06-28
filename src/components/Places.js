@@ -16,7 +16,6 @@ var ddb = null; // DynamoDB service object
 // DynamoDB Table Names
 const USER_TABLE_NAME = 'crowdguard-user-position';
 const PLACE_TABLE_NAME = 'crowdguard-place-status';
-// const PLACE_TABLE_NAME  = 'crowdguard-place-status';
 
 // Set SDK credentials with Cognito Identity Pool
 export function InitSDK(credentials) {
@@ -85,8 +84,8 @@ export function UpdateUserPositionDDB(props) {
       ':unixTimestamp': props.timestamp,
       ':userCoordinates': props.userCoordinates,
       ':placeLabel': props.placeLabel,
-      // Expire within 2 hrs
-      ':timestampTTL': parseInt(props.timestamp/1000) + 7200
+      // Expire within 1 hr
+      ':timestampTTL': parseInt(props.timestamp/1000) + 3600
     }
   };
 
