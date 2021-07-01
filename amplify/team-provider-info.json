@@ -9,7 +9,8 @@
       "UnauthRoleName": "amplify-crowdguardreact-dev-221331-unauthRole",
       "StackName": "amplify-crowdguardreact-dev-221331",
       "StackId": "arn:aws:cloudformation:us-west-2:811400410548:stack/amplify-crowdguardreact-dev-221331/ac3c63d0-cd87-11eb-9f70-02ff9399efdf",
-      "AmplifyAppId": "d1od2og7jwx8op"
+      "AmplifyAppId": "d1od2og7jwx8op",
+      "AuthTriggerTemplateURL": ""
     },
     "categories": {
       "auth": {

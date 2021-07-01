@@ -1,5 +1,7 @@
 #!/bin/bash
 
+amplify status
+amplify pull --appId d1od2og7jwx8op --envName dev
 npm install bootstrap
 npm install @aws-amplify/ui-react
 npm install aws-sdk
