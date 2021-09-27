@@ -40,18 +40,6 @@ amplify add auth
 amplify push
 ```
 
-6. Change the main app page to one using authentication
-
-```
-cp base/App-01.js src/App.js
-```
-
-7. Start the application, create an account and see that everything is working
-
-```
-npm start
-```
-
 ### Adding maps
 
 1. Now you need to go into your AWS account and create a new map in the Amazon Location service.
@@ -105,6 +93,27 @@ And select Identity Pool, check the name of the auth role and add this inline po
     "Action": "geo:SearchPlaceIndexForText",
     "Resource": "arn:aws:geo:<REGION>:<ACCOUNTNUMBER>:place-index/<INDEXNAME>"
 }
+```
+
+### Initializing project
+
+Install dependencies and initialize Node project
+
+```
+npm install bootstrap
+npm install @aws-amplify/ui-react
+npm install aws-sdk
+npm install @aws-amplify/core
+npm install mapbox-gl@1.0.0
+npm install react-map-gl@5.2.11
+npm install sweetalert2
+npm init
+```
+
+Start the app
+
+```
+npm start
 ```
 
 ## Resources
