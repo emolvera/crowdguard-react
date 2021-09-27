@@ -92,14 +92,6 @@ And select Identity Pool, check the name of the auth role and add this inline po
 }
 ```
 
-4. Create the client code. Make sure that you change the MapName to yours.
-
-```
-cp base/App-02.js src/App.js
-cp base/App-02.css src/App.css
-cp base/index-02.html public/index.html
-```
-
 ### Adding search capabilities
 
 1. Create in the Amazon Location Service a place index.
@@ -115,72 +107,6 @@ cp base/index-02.html public/index.html
 }
 ```
 
-3. Add the client code. Make sure that you change the MapName and IndexName to yours.
+## Resources
 
-```
-cp base/App-03.js src/App.js
-cp base/Pin-03.js src/Pin.js
-```
-
-### Adding a tracker
-
-1. Create a new tracker in the Amazon Location Service.
-
-2. Modify the auth role for the Amplify application by adding this permission.
-
-```
- {
-    "Sid": "VisualEditor3",
-    "Effect": "Allow",
-    "Action": "geo:GetDevicePositionHistory",
-    "Resource": "arn:aws:geo:<REGION>:<ACCOUNTNUMBER>:tracker/<TRACKERNAME>"
-}
-```
-
-3. Modify the client code to show the device real time in the map. Make sure that you change the MapName, IndexName, TrackerName and DeviceId to yours.
-
-```
-cp base/App-04.js src/App.js
-cp base/useInterval.js src/useInterval.js
-```
-
-4. Now you need to send some dummy data so you can see the tracker in action. Run the script:
-
-```
-./send-new-locations.sh <TRACKERNAME> <DEVICENAME>
-```
-
-This script will send locations every 30 seconds to the location service, simulating your device.
-
-5. Now you can visualize this by pressing the button track in the web app. And you will see new red dots appearing in the screen every 30 seconds.
-
-### Geofencing and notifications
-
-1. Go to the Amazon Location Service and add a new geofence.
-
-Upload the script /script/geofence.json.
-
-There you will find a geofence that is in the line where the tracker will be moving.
-
-2. Connect the tracker to the geofence in the Amazon Location Service. So now everytime the tracker enters or exit the geofence a message will be send to EventBridge.
-
-3. Create a SNS topic, that will send you an email. Confirm the subscription to the topic.
-
-4. Go to EventBridge and create a new rule with a custom pattern.
-
-```
-{
-  "source": ["aws.geo"],
-  "detail-type": ["Location Geofence Event"],
-  "detail": {
-    "EventType": ["ENTER"],
-    "GeofenceId": ["<YOUR GEOFENCE NAME"]
-  }
-}
-```
-
-And put as a target that SNS topic.
-
-5. Restart the script that sends tracker locations so it will go over the geofence (that is around Cairo)
-
-6. Wait for a while and after the tracker has gone over Cairo you will recieve an email.
+This project was based on [this demo](https://github.com/mavi888/drop-the-box-demo) by [mavi888](https://github.com/mavi888/), and on [this AWS sample](https://github.com/aws-samples/amazon-location-samples/tree/main/maplibre-js-react-iot-asset-tracking).
